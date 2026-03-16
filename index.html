@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Crossword Puzzle</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f4f4f4; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; }
+
+  #root {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  }
+
+  .title-bar {
+    position: absolute; top: 0; left: 0; width: 100%; height: 56px;
+    background: #2c3e50; color: #fff; font-size: 24px; font-weight: 700;
+    line-height: 56px; text-align: center; letter-spacing: 2px;
+    z-index: 10;
+  }
+
+  .toolbar {
+    position: absolute; top: 56px; left: 0; width: 100%; height: 48px;
+    background: #ecf0f1; border-bottom: 1px solid #bdc3c7;
+    z-index: 10;
+  }
+  .toolbar button {
+    position: absolute; top: 8px; height: 32px; padding: 0 18px;
+    border: 1px solid #95a5a6; border-radius: 4px; background: #fff;
+    font-size: 14px; cursor: pointer; font-weight: 600; color: #2c3e50;
+  }
+  .toolbar button:hover { background: #dfe6e9; }
+  .toolbar .btn-check { left: 20px; }
+  .toolbar .btn-reveal { left: 130px; }
+  .toolbar .btn-clear { left: 250px; }
+  .toolbar .timer {
+    position: absolute; top: 10px; right: 20px;
+    font-size: 18px; font-weight: 600; color: #2c3e50; line-height: 28px;
+  }
+
+  .grid-container {
+    position: absolute; top: 120px; left: 30px; width: 542px; height: 542px;
+    background: #000;
+  }
+
+  .cell {
+    position: absolute; width: 34px; height: 34px; background: #fff;
+    border: 1px solid #333; font-size: 18px; font-weight: 700;
+    text-align: center; line-height: 34px; text-transform: uppercase;
+    cursor: pointer; user-select: none;
+  }
+  .cell.black {
+    background: #2c3e50; cursor: default;
+  }
+  .cell.selected {
+    background: #f9e547;
+  }
+  .cell.highlighted {
+    background: #b8d4f0;
+  }
+  .cell.selected.highlighted {
+    background: #f9e547;
+  }
+  .cell.checked-wrong {
+    color: #e74c3c;
+  }
+  .cell.revealed {
+    color: #27ae60;
+  }
+  .cell-number {
+    position: absolute; top: 1px; left: 2px; font-size: 9px;
+    font-weight: 600; line-height: 9px; color: #333; pointer-events: none;
+  }
+  .cell-letter {
+    position: absolute; top: 6px; left: 0; width: 100%;
+    text-align: center; font-size: 18px; font-weight: 700;
+    pointer-events: none;
+  }
+
+  .selected-clue-bar {
+    position: absolute; top: 672px; left: 30px; width: 542px; height: 36px;
+    background: #ffeaa7; border: 1px solid #fdcb6e; border-radius: 4px;
+    font-size: 14px; font-weight: 600; color: #2d3436;
+    line-height: 36px; padding-left: 12px; overflow: hidden;
+    white-space: nowrap; text-overflow: ellipsis;
+  }
+
+  .clues-panel {
+    position: absolute; top: 120px; left: 600px; width: 380px; height: 588px;
+    background: #fff; border: 1px solid #bdc3c7; border-radius: 4px;
+    overflow: hidden;
+  }
+  .clues-across {
+    position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+    overflow-y: auto;
+  }
+  .clues-down {
+    position: absolute; top: 50%; left: 0; width: 100%; height: 50%;
+    overflow-y: auto; border-top: 2px solid #bdc3c7;
+  }
+  .clue-heading {
+    position: sticky; top: 0; left: 0; width: 100%; height: 32px;
+    background: #2c3e50; color: #fff; font-size: 14px; font-weight: 700;
+    line-height: 32px; padding-left: 12px; z-index: 5;
+  }
+  .clue-item {
+    padding: 4px 12px; font-size: 13px; cursor: pointer; color: #2d3436;
+  }
+  .clue-item:hover { background: #dfe6e9; }
+  .clue-item.active { background: #ffeaa7; font-weight: 700; }
+  .clue-number { font-weight: 700; margin-right: 4px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ===================== PUZZLE DATA =====================
+// 15x15 crossword grid. null = black cell, letter = solution
+const SOLUTION = [
+  ['S','C','A','M',null,'A','L','O','F','T',null,'B','A','S','S'],
+  ['H','O','R','A',null,'R','O','A','R','S',null,'O','L','I','O'],
+  ['A','R','E','N','A',null,'D','I','N','E','R',null,'A','M','P'],
+  ['R','E','S','T',null,'S','E','E','D',null,'R','A','V','E','N'],
+  ['P',null,null,null,'B','A','T',null,null,'S','A','N','D',null,null],
+  [null,'T','A','L','E','S',null,'A','C','H','E','S',null,'P','A'],
+  ['C','R','A','N','E',null,'M','A','S','T',null,null,'M','A','S'],
+  ['L','E','A','D',null,'P','I','N','E',null,'B','L','O','T',null],
+  ['A','N','T',null,'G','R','A','I','N',null,'A','I','R','S',null],
+  ['S','D',null,'S','L','I','D','E',null,'C','L','O','N','E',null],
+  [null,null,'F','A','I','N','T',null,'S','O','A','R',null,null,'A'],
+  ['G','R','I','L','L',null,null,'B','L','U','N','T',null,'I','N'],
+  ['O','A','N',null,'E','A','R','T','H',null,'E','E','L','S',null],
+  ['A','T','E','S',null,'C','A','R','E','S',null,'A','L','E','S'],
+  ['T','H','D',null,'S','K','I','N',null,'W','A','L','L','S',null],
+];
+
+// Cell numbers (0 means no number)
+const NUMBERS = [
+  [1 ,2 ,3 ,4 ,0 ,5 ,6 ,7 ,8 ,9 ,0 ,10,11,12,13],
+  [14,0 ,0 ,0 ,0 ,15,0 ,0 ,0 ,0 ,0 ,16,0 ,0 ,0 ],
+  [17,0 ,0 ,0 ,18,0 ,0 ,0 ,0 ,0 ,19,0 ,0 ,0 ,0 ],
+  [20,0 ,0 ,0 ,0 ,21,0 ,0 ,0 ,0 ,22,0 ,0 ,0 ,23],
+  [24,0 ,0 ,0 ,25,0 ,0 ,0 ,0 ,26,0 ,0 ,0 ,0 ,0 ],
+  [0 ,27,0 ,28,0 ,0 ,0 ,29,30,0 ,0 ,0 ,0 ,31,32],
+  [33,0 ,0 ,0 ,0 ,0 ,34,0 ,0 ,0 ,0 ,0 ,35,0 ,0 ],
+  [36,0 ,0 ,0 ,0 ,37,0 ,0 ,0 ,0 ,38,39,0 ,0 ,0 ],
+  [40,0 ,0 ,0 ,41,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+  [42,0 ,0 ,43,0 ,0 ,0 ,0 ,0 ,44,0 ,0 ,0 ,0 ,0 ],
+  [0 ,0 ,45,0 ,0 ,0 ,0 ,0 ,46,0 ,0 ,0 ,0 ,0 ,47],
+  [48,49,0 ,0 ,0 ,0 ,0 ,50,0 ,0 ,0 ,0 ,0 ,51,0 ],
+  [52,0 ,0 ,0 ,53,0 ,54,0 ,0 ,0 ,55,0 ,0 ,0 ,0 ],
+  [56,0 ,0 ,0 ,0 ,57,0 ,0 ,0 ,0 ,0 ,58,0 ,0 ,0 ],
+  [59,0 ,0 ,0 ,60,0 ,0 ,0 ,0 ,61,0 ,0 ,0 ,0 ,0 ],
+];
+
+const CLUES_ACROSS = [
+  {num:1,  text:"Con game"},
+  {num:5,  text:"Up in the air"},
+  {num:10, text:"Deep singing voice"},
+  {num:14, text:"Israeli circle dance"},
+  {num:15, text:"Makes loud sounds"},
+  {num:16, text:"Prefix meaning all"},
+  {num:17, text:"Sports stadium"},
+  {num:18, text:"Place to eat"},
+  {num:19, text:"Electric unit (abbr.)"},
+  {num:20, text:"Take it easy"},
+  {num:21, text:"Flower starter"},
+  {num:22, text:"Black bird"},
+  {num:24, text:"Flying mammal"},
+  {num:26, text:"Beach material"},
+  {num:27, text:"Stories"},
+  {num:29, text:"They may be throbbing"},
+  {num:31, text:"Dad, informally"},
+  {num:33, text:"Construction machine"},
+  {num:34, text:"Ship's pole"},
+  {num:35, text:"Holiday church service"},
+  {num:36, text:"Go first"},
+  {num:37, text:"Evergreen tree"},
+  {num:38, text:"Ink stain"},
+  {num:40, text:"Picnic invader"},
+  {num:41, text:"Cereal crop"},
+  {num:42, text:"Puts on pretensions"},
+  {num:43, text:"Playground feature"},
+  {num:44, text:"Genetic copy"},
+  {num:45, text:"Lose consciousness"},
+  {num:46, text:"Fly high"},
+  {num:47, text:"Alphabet start"},
+  {num:48, text:"Barbecue appliance"},
+  {num:50, text:"Not sharp"},
+  {num:51, text:"Preposition"},
+  {num:52, text:"Cereal grain"},
+  {num:53, text:"Soil, terra firma"},
+  {num:55, text:"Slippery fish"},
+  {num:56, text:"Consumes"},
+  {num:57, text:"Worries about"},
+  {num:58, text:"Beer choices"},
+  {num:59, text:"Doctoral degree (abbr.)"},
+  {num:60, text:"Outer layer"},
+  {num:61, text:"Room dividers"},
+];
+
+const CLUES_DOWN = [
+  {num:1,  text:"Pointed"},
+  {num:2,  text:"Center of a target"},
+  {num:3,  text:"Region"},
+  {num:4,  text:"Handy"},
+  {num:5,  text:"Warning device"},
+  {num:6,  text:"Chunk of history"},
+  {num:7,  text:"Restaurant list"},
+  {num:8,  text:"Locate"},
+  {num:9,  text:"Foot digit"},
+  {num:10, text:"Hit repeatedly"},
+  {num:11, text:"Highest point"},
+  {num:12, text:"Intelligent"},
+  {num:13, text:"Garden tools"},
+  {num:23, text:"Part of a play"},
+  {num:25, text:"Type of exam"},
+  {num:28, text:"Country estate"},
+  {num:29, text:"Expert"},
+  {num:30, text:"Prickly plant"},
+  {num:31, text:"Writing instrument"},
+  {num:32, text:"Burning residue"},
+  {num:34, text:"3.14159..."},
+  {num:35, text:"Shopping center"},
+  {num:38, text:"Prohibit"},
+  {num:39, text:"Tardy"},
+  {num:41, text:"Happy"},
+  {num:43, text:"Heavenly body"},
+  {num:44, text:"Shut"},
+  {num:45, text:"Destiny"},
+  {num:47, text:"Helpers (abbr.)"},
+  {num:49, text:"Tear apart"},
+  {num:50, text:"Honey maker"},
+  {num:51, text:"Hint"},
+  {num:53, text:"That thing"},
+  {num:54, text:"Where the sun rises"},
+];
+
+// ===================== HELPER: compute word ranges =====================
+function buildWordMap() {
+  const across = {};
+  const down = {};
+  // Across words
+  for (let r = 0; r < 15; r++) {
+    let c = 0;
+    while (c < 15) {
+      if (SOLUTION[r][c] === null) { c++; continue; }
+      const start = c;
+      const cells = [];
+      while (c < 15 && SOLUTION[r][c] !== null) {
+        cells.push([r, c]);
+        c++;
+      }
+      if (cells.length > 1) {
+        const num = NUMBERS[r][start];
+        if (num > 0) across[num] = cells;
+      }
+    }
+  }
+  // Down words
+  for (let c = 0; c < 15; c++) {
+    let r = 0;
+    while (r < 15) {
+      if (SOLUTION[r][c] === null) { r++; continue; }
+      const start = r;
+      const cells = [];
+      while (r < 15 && SOLUTION[r][c] !== null) {
+        cells.push([r, c]);
+        r++;
+      }
+      if (cells.length > 1) {
+        const num = NUMBERS[start][c];
+        if (num > 0) down[num] = cells;
+      }
+    }
+  }
+  return { across, down };
+}
+
+const WORD_MAP = buildWordMap();
+
+function findWordForCell(r, c, direction) {
+  const map = direction === 'across' ? WORD_MAP.across : WORD_MAP.down;
+  for (const num in map) {
+    const cells = map[num];
+    for (const [cr, cc] of cells) {
+      if (cr === r && cc === c) return { num: parseInt(num), cells };
+    }
+  }
+  return null;
+}
+
+// ===================== REACT COMPONENTS =====================
+
+function Cell({ row, col, letter, number, isBlack, isSelected, isHighlighted,
+                status, onClick }) {
+  if (isBlack) {
+    const style = {
+      position: 'absolute',
+      left: col * 36 + 1,
+      top: row * 36 + 1,
+      width: 34,
+      height: 34,
+      background: '#2c3e50',
+    };
+    return React.createElement('div', { style, className: 'cell black' });
+  }
+  let cls = 'cell';
+  if (isSelected) cls += ' selected';
+  else if (isHighlighted) cls += ' highlighted';
+  if (status === 'wrong') cls += ' checked-wrong';
+  if (status === 'revealed') cls += ' revealed';
+
+  const style = {
+    position: 'absolute',
+    left: col * 36 + 1,
+    top: row * 36 + 1,
+    width: 34,
+    height: 34,
+  };
+
+  return React.createElement('div', { className: cls, style, onClick },
+    number > 0 && React.createElement('span', { className: 'cell-number' }, number),
+    React.createElement('span', { className: 'cell-letter' }, letter || '')
+  );
+}
+
+function Grid({ grid, cellStates, selectedCell, highlightedCells, onCellClick }) {
+  const cells = [];
+  for (let r = 0; r < 15; r++) {
+    for (let c = 0; c < 15; c++) {
+      const isBlack = SOLUTION[r][c] === null;
+      const isSel = selectedCell && selectedCell[0] === r && selectedCell[1] === c;
+      const isHL = highlightedCells.some(([hr, hc]) => hr === r && hc === c);
+      cells.push(React.createElement(Cell, {
+        key: r + '-' + c,
+        row: r, col: c,
+        letter: grid[r][c],
+        number: NUMBERS[r][c],
+        isBlack, isSelected: isSel, isHighlighted: isHL,
+        status: cellStates[r][c],
+        onClick: () => !isBlack && onCellClick(r, c),
+      }));
+    }
+  }
+  return React.createElement('div', { className: 'grid-container' }, cells);
+}
+
+function ClueList({ title, clues, activeNum, onClueClick, className }) {
+  return React.createElement('div', { className },
+    React.createElement('div', { className: 'clue-heading' }, title),
+    clues.map(cl =>
+      React.createElement('div', {
+        key: cl.num,
+        className: 'clue-item' + (activeNum === cl.num ? ' active' : ''),
+        onClick: () => onClueClick(cl.num),
+      },
+        React.createElement('span', { className: 'clue-number' }, cl.num + '.'),
+        ' ' + cl.text
+      )
+    )
+  );
+}
+
+function Toolbar({ onCheck, onReveal, onClear, seconds }) {
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, '0');
+  return React.createElement('div', { className: 'toolbar' },
+    React.createElement('button', { className: 'btn-check', onClick: onCheck }, 'Check'),
+    React.createElement('button', { className: 'btn-reveal', onClick: onReveal }, 'Reveal'),
+    React.createElement('button', { className: 'btn-clear', onClick: onClear }, 'Clear'),
+    React.createElement('span', { className: 'timer' }, mm + ':' + ss)
+  );
+}
+
+function SelectedClueBar({ direction, wordInfo }) {
+  if (!wordInfo) return React.createElement('div', { className: 'selected-clue-bar' }, '\u00A0');
+  const clueList = direction === 'across' ? CLUES_ACROSS : CLUES_DOWN;
+  const clue = clueList.find(c => c.num === wordInfo.num);
+  const label = wordInfo.num + ' ' + direction.charAt(0).toUpperCase() + direction.slice(1);
+  return React.createElement('div', { className: 'selected-clue-bar' },
+    label + ': ' + (clue ? clue.text : '')
+  );
+}
+
+function App() {
+  const [grid, setGrid] = React.useState(() => {
+    const g = [];
+    for (let r = 0; r < 15; r++) {
+      g.push(new Array(15).fill(''));
+    }
+    return g;
+  });
+
+  const [cellStates, setCellStates] = React.useState(() => {
+    const s = [];
+    for (let r = 0; r < 15; r++) {
+      s.push(new Array(15).fill(null));
+    }
+    return s;
+  });
+
+  const [selectedCell, setSelectedCell] = React.useState([0, 0]);
+  const [direction, setDirection] = React.useState('across');
+  const [seconds, setSeconds] = React.useState(0);
+  const [running, setRunning] = React.useState(true);
+
+  // Timer
+  React.useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [running]);
+
+  // Current word info
+  const wordInfo = findWordForCell(selectedCell[0], selectedCell[1], direction);
+  const highlightedCells = wordInfo ? wordInfo.cells : [];
+
+  // If no word in current direction, try the other
+  React.useEffect(() => {
+    if (!wordInfo) {
+      const other = direction === 'across' ? 'down' : 'across';
+      const alt = findWordForCell(selectedCell[0], selectedCell[1], other);
+      if (alt) setDirection(other);
+    }
+  }, [selectedCell[0], selectedCell[1]]);
+
+  function handleCellClick(r, c) {
+    if (selectedCell[0] === r && selectedCell[1] === c) {
+      // Toggle direction
+      const newDir = direction === 'across' ? 'down' : 'across';
+      const alt = findWordForCell(r, c, newDir);
+      if (alt) setDirection(newDir);
+    } else {
+      setSelectedCell([r, c]);
+    }
+  }
+
+  function handleClueClick(num, dir) {
+    const map = dir === 'across' ? WORD_MAP.across : WORD_MAP.down;
+    const cells = map[num];
+    if (cells) {
+      setDirection(dir);
+      setSelectedCell(cells[0]);
+    }
+  }
+
+  function moveTo(r, c) {
+    if (r >= 0 && r < 15 && c >= 0 && c < 15 && SOLUTION[r][c] !== null) {
+      setSelectedCell([r, c]);
+    }
+  }
+
+  function advanceCursor() {
+    const [r, c] = selectedCell;
+    if (direction === 'across') {
+      for (let nc = c + 1; nc < 15; nc++) {
+        if (SOLUTION[r][nc] !== null) { setSelectedCell([r, nc]); return; }
+      }
+    } else {
+      for (let nr = r + 1; nr < 15; nr++) {
+        if (SOLUTION[nr][c] !== null) { setSelectedCell([nr, c]); return; }
+      }
+    }
+  }
+
+  function retreatCursor() {
+    const [r, c] = selectedCell;
+    if (direction === 'across') {
+      for (let nc = c - 1; nc >= 0; nc--) {
+        if (SOLUTION[r][nc] !== null) { setSelectedCell([r, nc]); return; }
+      }
+    } else {
+      for (let nr = r - 1; nr >= 0; nr--) {
+        if (SOLUTION[nr][c] !== null) { setSelectedCell([nr, c]); return; }
+      }
+    }
+  }
+
+  function cycleClue(forward) {
+    const map = direction === 'across' ? WORD_MAP.across : WORD_MAP.down;
+    const nums = Object.keys(map).map(Number).sort((a, b) => a - b);
+    const curNum = wordInfo ? wordInfo.num : nums[0];
+    const idx = nums.indexOf(curNum);
+    let nextIdx;
+    if (forward) {
+      nextIdx = idx + 1;
+      if (nextIdx >= nums.length) {
+        // Switch direction
+        const otherDir = direction === 'across' ? 'down' : 'across';
+        const otherMap = otherDir === 'across' ? WORD_MAP.across : WORD_MAP.down;
+        const otherNums = Object.keys(otherMap).map(Number).sort((a, b) => a - b);
+        setDirection(otherDir);
+        setSelectedCell(otherMap[otherNums[0]][0]);
+        return;
+      }
+    } else {
+      nextIdx = idx - 1;
+      if (nextIdx < 0) {
+        const otherDir = direction === 'across' ? 'down' : 'across';
+        const otherMap = otherDir === 'across' ? WORD_MAP.across : WORD_MAP.down;
+        const otherNums = Object.keys(otherMap).map(Number).sort((a, b) => a - b);
+        setDirection(otherDir);
+        setSelectedCell(otherMap[otherNums[otherNums.length - 1]][0]);
+        return;
+      }
+    }
+    setSelectedCell(map[nums[nextIdx]][0]);
+  }
+
+  // Keyboard handler
+  React.useEffect(() => {
+    function handleKey(e) {
+      const [r, c] = selectedCell;
+      if (e.key === 'ArrowRight') { e.preventDefault(); setDirection('across'); moveTo(r, c + 1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); setDirection('across'); moveTo(r, c - 1); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); setDirection('down'); moveTo(r + 1, c); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setDirection('down'); moveTo(r - 1, c); }
+      else if (e.key === 'Tab') {
+        e.preventDefault();
+        cycleClue(!e.shiftKey);
+      }
+      else if (e.key === 'Backspace') {
+        e.preventDefault();
+        if (grid[r][c]) {
+          const newGrid = grid.map(row => [...row]);
+          newGrid[r][c] = '';
+          const newStates = cellStates.map(row => [...row]);
+          newStates[r][c] = null;
+          setGrid(newGrid);
+          setCellStates(newStates);
+        } else {
+          retreatCursor();
+        }
+      }
+      else if (/^[a-zA-Z]$/.test(e.key)) {
+        e.preventDefault();
+        const newGrid = grid.map(row => [...row]);
+        newGrid[r][c] = e.key.toUpperCase();
+        const newStates = cellStates.map(row => [...row]);
+        newStates[r][c] = null;
+        setGrid(newGrid);
+        setCellStates(newStates);
+        advanceCursor();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  });
+
+  function handleCheck() {
+    if (!wordInfo) return;
+    const newStates = cellStates.map(row => [...row]);
+    for (const [cr, cc] of wordInfo.cells) {
+      if (grid[cr][cc]) {
+        if (grid[cr][cc] !== SOLUTION[cr][cc]) {
+          newStates[cr][cc] = 'wrong';
+        }
+      }
+    }
+    setCellStates(newStates);
+  }
+
+  function handleReveal() {
+    if (!wordInfo) return;
+    const newGrid = grid.map(row => [...row]);
+    const newStates = cellStates.map(row => [...row]);
+    for (const [cr, cc] of wordInfo.cells) {
+      newGrid[cr][cc] = SOLUTION[cr][cc];
+      newStates[cr][cc] = 'revealed';
+    }
+    setGrid(newGrid);
+    setCellStates(newStates);
+  }
+
+  function handleClear() {
+    const newGrid = grid.map(row => [...row]);
+    const newStates = cellStates.map(row => [...row]);
+    for (let r = 0; r < 15; r++) {
+      for (let c = 0; c < 15; c++) {
+        newGrid[r][c] = '';
+        newStates[r][c] = null;
+      }
+    }
+    setGrid(newGrid);
+    setCellStates(newStates);
+    setSeconds(0);
+  }
+
+  return React.createElement(React.Fragment, null,
+    React.createElement('div', { className: 'title-bar' }, 'CROSSWORD PUZZLE'),
+    React.createElement(Toolbar, {
+      onCheck: handleCheck, onReveal: handleReveal, onClear: handleClear,
+      seconds,
+    }),
+    React.createElement(Grid, {
+      grid, cellStates, selectedCell, highlightedCells, onCellClick: handleCellClick,
+    }),
+    React.createElement(SelectedClueBar, { direction, wordInfo }),
+    React.createElement('div', { className: 'clues-panel' },
+      React.createElement(ClueList, {
+        title: 'ACROSS', clues: CLUES_ACROSS,
+        activeNum: direction === 'across' && wordInfo ? wordInfo.num : -1,
+        onClueClick: (n) => handleClueClick(n, 'across'),
+        className: 'clues-across',
+      }),
+      React.createElement(ClueList, {
+        title: 'DOWN', clues: CLUES_DOWN,
+        activeNum: direction === 'down' && wordInfo ? wordInfo.num : -1,
+        onClueClick: (n) => handleClueClick(n, 'down'),
+        className: 'clues-down',
+      })
+    )
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
