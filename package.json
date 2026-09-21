@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "server": "tsx --env-file-if-exists=.env.local server/index.ts",
+    "server": "ALLOW_GUEST=1 tsx --env-file-if-exists=.env.local server/index.ts",
     "test": "tsx --test server/app.test.ts"
   },
   "dependencies": {

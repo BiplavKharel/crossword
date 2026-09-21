@@ -19,7 +19,7 @@ export type Action =
 export function initGame(p: Puzzle): GameState {
   for (let r = 0; r < p.size; r++) {
     for (let c = 0; c < p.size; c++) {
-      if (p.solution[r][c]) return { letters: emptyLetters(p.size), sel: [r, c], dir: p.wordAt[r][c].across ? 'across' : 'down' };
+      if (p.playable[r][c]) return { letters: emptyLetters(p.size), sel: [r, c], dir: p.wordAt[r][c].across ? 'across' : 'down' };
     }
   }
   throw new Error('puzzle has no open cells');
@@ -49,7 +49,7 @@ function setLetter(s: GameState, [r, c]: Pos, ch: string): Letters {
 export function reduce(p: Puzzle, s: GameState, a: Action): GameState {
   switch (a.type) {
     case 'select': {
-      if (!p.solution[a.pos[0]][a.pos[1]]) return s;
+      if (!p.playable[a.pos[0]][a.pos[1]]) return s;
       const same = a.pos[0] === s.sel[0] && a.pos[1] === s.sel[1];
       const next = { ...s, sel: a.pos };
       return same && p.wordAt[a.pos[0]][a.pos[1]][other(s.dir)] ? { ...next, dir: other(s.dir) } : fixDir(p, next);
@@ -74,7 +74,7 @@ export function reduce(p: Puzzle, s: GameState, a: Action): GameState {
       if (s.dir !== axis) return fixDir(p, { ...s, dir: axis });
       let r = s.sel[0] + dr, c = s.sel[1] + dc;
       while (r >= 0 && c >= 0 && r < p.size && c < p.size) {
-        if (p.solution[r][c]) return fixDir(p, { ...s, sel: [r, c] });
+        if (p.playable[r][c]) return fixDir(p, { ...s, sel: [r, c] });
         r += dr; c += dc;
       }
       return s;

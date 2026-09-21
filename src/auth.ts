@@ -23,7 +23,7 @@ declare global {
 
 export const CLIENT_ID = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID as string | undefined;
 const KEY = 'crossword.user';
-const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+export const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
 /** Ask the server to verify a Google credential. Throws if it's rejected. */
 export async function verifyCredential(credential: string): Promise<User> {
@@ -48,7 +48,7 @@ export async function sessionStillValid(u: User): Promise<boolean> {
   }
 }
 
-export const guestUser = (): User => ({ id: 'guest', name: 'Guest', email: '', exp: Number.MAX_SAFE_INTEGER });
+export const guestUser = (): User => ({ id: 'guest', name: 'Guest', email: '', credential: 'guest', exp: Number.MAX_SAFE_INTEGER });
 
 export function loadUser(): User | null {
   try {

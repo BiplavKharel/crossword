@@ -1,5 +1,5 @@
 import type { Letters, Puzzle, Word } from '../types';
-import { wordSolved } from '../puzzle';
+import { wordFilled } from '../puzzle';
 
 interface Props {
   puzzle: Puzzle;
@@ -20,7 +20,7 @@ export function ClueLists({ puzzle, letters, current, crossing, onJump }: Props)
             {puzzle.words[dir].map(w => (
               <li
                 key={w.num}
-                className={[w === current && 'active', w === crossing && 'cross', wordSolved(puzzle, w, letters) && 'done'].filter(Boolean).join(' ')}
+                className={[w === current && 'active', w === crossing && 'cross', wordFilled(w, letters) && 'done'].filter(Boolean).join(' ')}
                 onClick={() => onJump(w)}
               >
                 <span className="label">{w.num}</span>

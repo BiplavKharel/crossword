@@ -35,7 +35,7 @@ export function MyBoard({ puzzle, letters, sel, dir, onSelect }: MineProps) {
   const inWord = (r: number, c: number) => !!word?.cells.some(([wr, wc]) => wr === r && wc === c);
   return (
     <SvgBoard size={puzzle.size} label="Your puzzle board">
-      {puzzle.solution.map((row, r) =>
+      {puzzle.playable.map((row, r) =>
         row.map((v, c) => {
           const x = at(c), y = at(r);
           if (!v) return <rect key={`${r}-${c}`} className="cell block" x={x} y={y} width={CELL} height={CELL} />;
@@ -66,7 +66,7 @@ interface OpponentProps {
 export function OpponentBoard({ puzzle, filled }: OpponentProps) {
   return (
     <SvgBoard size={puzzle.size} label="Opponent's puzzle board, letters hidden">
-      {puzzle.solution.map((row, r) =>
+      {puzzle.playable.map((row, r) =>
         row.map((v, c) => {
           const x = at(c), y = at(r);
           const cls = v ? (filled[r][c] ? 'cell filled' : 'cell') : 'cell block';

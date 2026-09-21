@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { Pos, Puzzle } from '../types';
+import type { User } from '../auth';
+import { verifySolution } from '../api';
 import { initGame, reduce } from '../game';
-import { isSolved, playableCount } from '../puzzle';
+import { allFilled, playableCount } from '../puzzle';
 import { useBot } from '../useBot';
 import { ClueLists } from './ClueLists';
 import { MyBoard, OpponentBoard } from './Boards';
+import { EndScreen, formatTime, type Result } from './EndScreen';
 
 function Progress({ label, count, total }: { label: string; count: number; total: number }) {
   return (
@@ -17,17 +20,53 @@ function Progress({ label, count, total }: { label: string; count: number; total
 
 const countTrue = (g: boolean[][]) => g.flat().filter(Boolean).length;
 
-export function Game({ puzzle }: { puzzle: Puzzle }) {
+interface Props {
+  puzzle: Puzzle;
+  user: User;
+  opponentName: string;
+  /** Called once when the game ends, with the outcome. */
+  onFinish: (r: Result) => void;
+  onExit: () => void;
+}
+
+export function Game({ puzzle, user, opponentName, onFinish, onExit }: Props) {
   const [state, dispatch] = useReducer((s: ReturnType<typeof initGame>, a: Parameters<typeof reduce>[2]) => reduce(puzzle, s, a), puzzle, initGame);
-  const [winner, setWinner] = useState<'me' | 'opponent' | null>(null);
+  const [result, setResult] = useState<Result | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const [notice, setNotice] = useState('');
+  const started = useRef(Date.now());
   const ghost = useRef<HTMLInputElement>(null);
-  const over = winner !== null;
+  const over = result !== null;
 
-  const oppFilled = useBot(puzzle, !over, () => setWinner(w => w ?? 'opponent'));
+  // First finisher wins; later calls are ignored.
+  const finish = useCallback((winner: Result['winner']) => {
+    const seconds = Math.round((Date.now() - started.current) / 1000);
+    setResult(r => r ?? { winner, seconds });
+  }, []);
 
+  const reported = useRef(false);
   useEffect(() => {
-    if (isSolved(puzzle, state.letters)) setWinner(w => w ?? 'me');
-  }, [puzzle, state.letters]);
+    if (result && !reported.current) {
+      reported.current = true;
+      onFinish(result);
+    }
+  }, [result, onFinish]);
+
+  const oppFilled = useBot(puzzle, !over, () => finish('opponent'));
+
+  // Once the grid is full, the server (which holds the solution) decides if it's a win.
+  useEffect(() => {
+    if (over) return;
+    if (!allFilled(puzzle, state.letters)) { setNotice(''); return; }
+    let stale = false;
+    verifySolution(user, puzzle.id, state.letters)
+      .then(ok => {
+        if (stale) return;
+        if (ok) finish('me'); else setNotice('Not quite. One or more squares are wrong.');
+      })
+      .catch(() => { if (!stale) setNotice("Couldn't check your answer. Change a letter to try again."); });
+    return () => { stale = true; };
+  }, [over, puzzle, state.letters, user, finish]);
 
   useEffect(() => {
     if (over) return;
@@ -51,15 +90,20 @@ export function Game({ puzzle }: { puzzle: Puzzle }) {
 
   const total = playableCount(puzzle);
   const myFilled = state.letters.flat().filter(Boolean).length;
+  const oppCount = countTrue(oppFilled);
   const current = puzzle.wordAt[state.sel[0]][state.sel[1]][state.dir];
   const crossing = puzzle.wordAt[state.sel[0]][state.sel[1]][state.dir === 'across' ? 'down' : 'across'];
   const select = (pos: Pos) => { dispatch({ type: 'select', pos }); focus(); };
 
   return (
     <>
-      <div className={`status ${winner === 'me' ? 'win' : winner === 'opponent' ? 'lose' : ''}`}>
-        {winner === 'me' && 'You solved it first. You win!'}
-        {winner === 'opponent' && 'Your opponent finished first.'}
+      <div className={`status ${result ? (result.winner === 'me' ? 'win' : 'lose') : notice ? 'warn' : ''}`}>
+        {result ? (
+          <>
+            {result.winner === 'me' ? 'You won' : `${opponentName} won`} · {formatTime(result.seconds)}
+            <button onClick={onExit}>Back to lobby</button>
+          </>
+        ) : notice}
       </div>
       <main>
         <section className="side me">
@@ -70,9 +114,9 @@ export function Game({ puzzle }: { puzzle: Puzzle }) {
           <Progress label="You" count={myFilled} total={total} />
         </section>
         <section className="side opp">
-          <div className="banner muted"><span>Opponent's board · letters hidden</span></div>
+          <div className="banner muted"><span>{opponentName}'s board · letters hidden</span></div>
           <OpponentBoard puzzle={puzzle} filled={oppFilled} />
-          <Progress label="Opponent" count={countTrue(oppFilled)} total={total} />
+          <Progress label={opponentName} count={oppCount} total={total} />
         </section>
       </main>
       <ClueLists puzzle={puzzle} letters={state.letters} current={current} crossing={crossing} onJump={w => { dispatch({ type: 'jump', word: w }); focus(); }} />
@@ -88,6 +132,9 @@ export function Game({ puzzle }: { puzzle: Puzzle }) {
           if (!over && /^[a-zA-Z]$/.test(ch)) dispatch({ type: 'type', ch: ch.toUpperCase() });
         }}
       />
+      {result && !dismissed && (
+        <EndScreen result={result} myCount={myFilled} oppCount={oppCount} total={total} opponentName={opponentName} onExit={onExit} onClose={() => { setDismissed(true); }} />
+      )}
     </>
   );
 }
