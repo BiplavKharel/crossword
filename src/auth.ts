@@ -21,7 +21,7 @@ declare global {
   }
 }
 
-export const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+export const CLIENT_ID = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID as string | undefined;
 const KEY = 'crossword.user';
 const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 

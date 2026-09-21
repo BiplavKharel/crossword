@@ -35,7 +35,7 @@ export function Login({ onLogin }: { onLogin: (u: User) => void }) {
           <div ref={button} className="google-btn" />
         ) : (
           <p className="login-note">
-            Google sign-in isn't configured. Set <code>VITE_GOOGLE_CLIENT_ID</code> in <code>.env.local</code> and restart.
+            Google sign-in isn't configured. Set <code>PUBLIC_GOOGLE_CLIENT_ID</code> in <code>.env.local</code> and restart.
           </p>
         )}
         {error && <p className="login-error">{error}</p>}

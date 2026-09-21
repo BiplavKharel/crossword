@@ -14,7 +14,7 @@ export function googleVerifier(clientId: string): Verifier {
 }
 
 export const clientIdFromEnv = () => {
-  const id = process.env.GOOGLE_CLIENT_ID ?? process.env.VITE_GOOGLE_CLIENT_ID;
-  if (!id) throw new Error('Set GOOGLE_CLIENT_ID (or VITE_GOOGLE_CLIENT_ID)');
+  const id = process.env.GOOGLE_CLIENT_ID ?? process.env.PUBLIC_GOOGLE_CLIENT_ID;
+  if (!id) throw new Error('Set GOOGLE_CLIENT_ID (or PUBLIC_GOOGLE_CLIENT_ID)');
   return id;
 };
