@@ -1,0 +1,1134 @@
+[
+  {
+    "date": "2026-09-11",
+    "size": [
+      5,
+      5
+    ],
+    "grid": [
+      [
+        "R",
+        "E",
+        "B",
+        "U",
+        "S"
+      ],
+      [
+        "I",
+        "D",
+        "A",
+        "H",
+        "O"
+      ],
+      [
+        "D",
+        "E",
+        "C",
+        "A",
+        "F"
+      ],
+      [
+        "S",
+        "N",
+        "O",
+        "U",
+        "T"
+      ],
+      [
+        null,
+        "S",
+        "N",
+        "L",
+        null
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "Picture puzzle where \ud83d\udc41\ufe0f + \u2764\ufe0f + \ud83d\udc11 means \"I love you\"",
+          "answer": "REBUS"
+        },
+        {
+          "num": 6,
+          "text": "Its license plates read \"Famous Potatoes\"",
+          "answer": "IDAHO"
+        },
+        {
+          "num": 7,
+          "text": "After-dinner coffee order",
+          "answer": "DECAF"
+        },
+        {
+          "num": 8,
+          "text": "Distinctive feature of an aardvark",
+          "answer": "SNOUT"
+        },
+        {
+          "num": 9,
+          "text": "Long-running show with a cold open, familiarly",
+          "answer": "SNL"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "Frees (of)",
+          "answer": "RIDS"
+        },
+        {
+          "num": 2,
+          "text": "Utopian places",
+          "answer": "EDENS"
+        },
+        {
+          "num": 3,
+          "text": "\"I'll bring home the turkey if you bring home the ___\" (Weezer lyric)",
+          "answer": "BACON"
+        },
+        {
+          "num": 4,
+          "text": "Big name in moving trucks",
+          "answer": "UHAUL"
+        },
+        {
+          "num": 5,
+          "text": "Word before ware or ball",
+          "answer": "SOFT"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-12",
+    "size": [
+      7,
+      7
+    ],
+    "grid": [
+      [
+        "O",
+        "Y",
+        "S",
+        "T",
+        "E",
+        "R",
+        "S"
+      ],
+      [
+        "C",
+        "O",
+        "P",
+        "I",
+        "L",
+        "O",
+        "T"
+      ],
+      [
+        "T",
+        "U",
+        "R",
+        "N",
+        "K",
+        "E",
+        "Y"
+      ],
+      [
+        "A",
+        "W",
+        "A",
+        "Y",
+        null,
+        null,
+        null
+      ],
+      [
+        "V",
+        "I",
+        "N",
+        "T",
+        "A",
+        "G",
+        "E"
+      ],
+      [
+        "E",
+        "N",
+        "G",
+        "I",
+        "N",
+        "E",
+        "S"
+      ],
+      [
+        null,
+        null,
+        null,
+        "M",
+        "A",
+        "L",
+        "E"
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "If you order \"ostriche\" on an Italian menu, you actually get these",
+          "answer": "OYSTERS"
+        },
+        {
+          "num": 8,
+          "text": "Microsoft's A.I. assistant",
+          "answer": "COPILOT"
+        },
+        {
+          "num": 9,
+          "text": "Move-in-ready, as a house for sale",
+          "answer": "TURNKEY"
+        },
+        {
+          "num": 10,
+          "text": "Home's opposite, on scoreboards",
+          "answer": "AWAY"
+        },
+        {
+          "num": 11,
+          "text": "Old and classic, as a car",
+          "answer": "VINTAGE"
+        },
+        {
+          "num": 15,
+          "text": "They're revved with a \"Vroom!\"",
+          "answer": "ENGINES"
+        },
+        {
+          "num": 16,
+          "text": "M, on a form",
+          "answer": "MALE"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "Span from C to C, in music",
+          "answer": "OCTAVE"
+        },
+        {
+          "num": 2,
+          "text": "\"Fine, I give up\"",
+          "answer": "YOUWIN"
+        },
+        {
+          "num": 3,
+          "text": "Pounced",
+          "answer": "SPRANG"
+        },
+        {
+          "num": 4,
+          "text": "Young boy saved by Scrooge's change of heart",
+          "answer": "TINYTIM"
+        },
+        {
+          "num": 5,
+          "text": "Antlered animal of the Rockies",
+          "answer": "ELK"
+        },
+        {
+          "num": 6,
+          "text": "Fish eggs",
+          "answer": "ROE"
+        },
+        {
+          "num": 7,
+          "text": "Home with a trough of slop",
+          "answer": "STY"
+        },
+        {
+          "num": 12,
+          "text": "Actress de Armas",
+          "answer": "ANA"
+        },
+        {
+          "num": 13,
+          "text": "Stylist's goo",
+          "answer": "GEL"
+        },
+        {
+          "num": 14,
+          "text": "Suffix with Vietnam and Senegal",
+          "answer": "ESE"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-13",
+    "size": [
+      5,
+      5
+    ],
+    "grid": [
+      [
+        "C",
+        "A",
+        "P",
+        "R",
+        "I"
+      ],
+      [
+        "A",
+        "L",
+        "L",
+        "I",
+        "N"
+      ],
+      [
+        "B",
+        "L",
+        "A",
+        "C",
+        "K"
+      ],
+      [
+        "L",
+        "O",
+        "N",
+        "E",
+        null
+      ],
+      [
+        "E",
+        "Y",
+        "E",
+        null,
+        null
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "___ Sun (juice drink)",
+          "answer": "CAPRI"
+        },
+        {
+          "num": 6,
+          "text": "Maximum poker bet",
+          "answer": "ALLIN"
+        },
+        {
+          "num": 7,
+          "text": "With 9-Across, injury treated with a raw steak in old cartoons",
+          "answer": "BLACK"
+        },
+        {
+          "num": 8,
+          "text": "Only",
+          "answer": "LONE"
+        },
+        {
+          "num": 9,
+          "text": "With 7-Across, application on a football player's face",
+          "answer": "EYE"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "The \"C\" of CNN",
+          "answer": "CABLE"
+        },
+        {
+          "num": 2,
+          "text": "Metal mixture",
+          "answer": "ALLOY"
+        },
+        {
+          "num": 3,
+          "text": "What Superman is mistaken for",
+          "answer": "PLANE"
+        },
+        {
+          "num": 4,
+          "text": "\"___ is great when you're hungry and you want 2,000 of something\": Mitch Hedberg",
+          "answer": "RICE"
+        },
+        {
+          "num": 5,
+          "text": "Printer's supply",
+          "answer": "INK"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-14",
+    "size": [
+      5,
+      5
+    ],
+    "grid": [
+      [
+        null,
+        null,
+        "C",
+        "B",
+        "S"
+      ],
+      [
+        null,
+        "P",
+        "O",
+        "R",
+        "T"
+      ],
+      [
+        "C",
+        "A",
+        "M",
+        "E",
+        "O"
+      ],
+      [
+        "A",
+        "S",
+        "I",
+        "A",
+        "N"
+      ],
+      [
+        "R",
+        "O",
+        "C",
+        "K",
+        "Y"
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "Channel for \"Survivor\" and \"Big Brother\"",
+          "answer": "CBS"
+        },
+        {
+          "num": 4,
+          "text": "Dessert wine",
+          "answer": "PORT"
+        },
+        {
+          "num": 5,
+          "text": "Alfred Hitchcock famously made one in 40 of his 53 films",
+          "answer": "CAMEO"
+        },
+        {
+          "num": 6,
+          "text": "Like elephants distinguished by their smaller rounded ears",
+          "answer": "ASIAN"
+        },
+        {
+          "num": 7,
+          "text": "\"The ___ Horror Show,\" 2026 Broadway revival with nine Tony nominations",
+          "answer": "ROCKY"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "Word before relief, book or strip",
+          "answer": "COMIC"
+        },
+        {
+          "num": 2,
+          "text": "Snap (off)",
+          "answer": "BREAK"
+        },
+        {
+          "num": 3,
+          "text": "Cold and unfeeling",
+          "answer": "STONY"
+        },
+        {
+          "num": 4,
+          "text": "El ___, West Texas metropolis",
+          "answer": "PASO"
+        },
+        {
+          "num": 5,
+          "text": "Expensive gift for a 16th birthday",
+          "answer": "CAR"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-15",
+    "size": [
+      5,
+      5
+    ],
+    "grid": [
+      [
+        "O",
+        "B",
+        "V",
+        "I",
+        null
+      ],
+      [
+        "F",
+        "E",
+        "E",
+        "T",
+        null
+      ],
+      [
+        "F",
+        "A",
+        "L",
+        "S",
+        "E"
+      ],
+      [
+        null,
+        "C",
+        "M",
+        "O",
+        "N"
+      ],
+      [
+        null,
+        "H",
+        "A",
+        "N",
+        "D"
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "\"That's a no-brainer!,\" slangily",
+          "answer": "OBVI"
+        },
+        {
+          "num": 5,
+          "text": "5,280 in a mile",
+          "answer": "FEET"
+        },
+        {
+          "num": 6,
+          "text": "F, on a test",
+          "answer": "FALSE"
+        },
+        {
+          "num": 8,
+          "text": "\"Give me a break!\"",
+          "answer": "CMON"
+        },
+        {
+          "num": 9,
+          "text": "\"Don't walk\" symbol at a crosswalk",
+          "answer": "HAND"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "Brand of bug spray with an exclamation point in its name",
+          "answer": "OFF"
+        },
+        {
+          "num": 2,
+          "text": "Long ___, Calif.",
+          "answer": "BEACH"
+        },
+        {
+          "num": 3,
+          "text": "Brainy member of the Scooby-Doo gang",
+          "answer": "VELMA"
+        },
+        {
+          "num": 4,
+          "text": "\"Let's do this thing\"",
+          "answer": "ITSON"
+        },
+        {
+          "num": 7,
+          "text": "Conclusion",
+          "answer": "END"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-16",
+    "size": [
+      5,
+      5
+    ],
+    "grid": [
+      [
+        "M",
+        "A",
+        "V",
+        null,
+        null
+      ],
+      [
+        "E",
+        "V",
+        "E",
+        "N",
+        "T"
+      ],
+      [
+        "L",
+        "A",
+        "N",
+        "A",
+        "I"
+      ],
+      [
+        "T",
+        "I",
+        "T",
+        "A",
+        "N"
+      ],
+      [
+        null,
+        "L",
+        "I",
+        "N",
+        "E"
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "Dallas hooper, for short",
+          "answer": "MAV"
+        },
+        {
+          "num": 4,
+          "text": "Something to R.S.V.P. to",
+          "answer": "EVENT"
+        },
+        {
+          "num": 7,
+          "text": "Kind of patio that shares its name with a Hawaiian island",
+          "answer": "LANAI"
+        },
+        {
+          "num": 8,
+          "text": "Heavyweight in an industry",
+          "answer": "TITAN"
+        },
+        {
+          "num": 9,
+          "text": "Straight ___, every part of every letter in this puzzle's grid",
+          "answer": "LINE"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "Turn gooey, as cheese",
+          "answer": "MELT"
+        },
+        {
+          "num": 2,
+          "text": "To no ___ (unsuccessfully)",
+          "answer": "AVAIL"
+        },
+        {
+          "num": 3,
+          "text": "Large size at Starbucks",
+          "answer": "VENTI"
+        },
+        {
+          "num": 5,
+          "text": "Flatbread sometimes brushed with garlic butter",
+          "answer": "NAAN"
+        },
+        {
+          "num": 6,
+          "text": "Sharp part of a fork",
+          "answer": "TINE"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-17",
+    "size": [
+      5,
+      5
+    ],
+    "grid": [
+      [
+        "Q",
+        "U",
+        "A",
+        "C",
+        "K"
+      ],
+      [
+        "U",
+        "N",
+        "C",
+        "L",
+        "E"
+      ],
+      [
+        "I",
+        "D",
+        "I",
+        "O",
+        "T"
+      ],
+      [
+        "R",
+        "U",
+        "N",
+        "T",
+        "O"
+      ],
+      [
+        "K",
+        "E",
+        "G",
+        "S",
+        null
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "Noise heard in an Aflac commercial",
+          "answer": "QUACK"
+        },
+        {
+          "num": 6,
+          "text": "___ Fester, \"Wednesday\" character played by Fred Armisen",
+          "answer": "UNCLE"
+        },
+        {
+          "num": 7,
+          "text": "Total moron",
+          "answer": "IDIOT"
+        },
+        {
+          "num": 8,
+          "text": "Total, as expenses",
+          "answer": "RUNTO"
+        },
+        {
+          "num": 9,
+          "text": "Containers for some basement parties",
+          "answer": "KEGS"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "Unique mannerism",
+          "answer": "QUIRK"
+        },
+        {
+          "num": 2,
+          "text": "Excessive, as criticism or punishment",
+          "answer": "UNDUE"
+        },
+        {
+          "num": 3,
+          "text": "Scoring 100% on",
+          "answer": "ACING"
+        },
+        {
+          "num": 4,
+          "text": "Lumps in non-homogenized milk",
+          "answer": "CLOTS"
+        },
+        {
+          "num": 5,
+          "text": "Kind of high-fat, low-carb diet",
+          "answer": "KETO"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-18",
+    "size": [
+      5,
+      5
+    ],
+    "grid": [
+      [
+        null,
+        "B",
+        "A",
+        "R",
+        "T"
+      ],
+      [
+        null,
+        "L",
+        "M",
+        "A",
+        "O"
+      ],
+      [
+        "F",
+        "O",
+        "A",
+        "M",
+        "Y"
+      ],
+      [
+        "O",
+        "O",
+        "Z",
+        "E",
+        null
+      ],
+      [
+        "X",
+        "M",
+        "E",
+        "N",
+        null
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "San Francisco's rail system",
+          "answer": "BART"
+        },
+        {
+          "num": 5,
+          "text": "Response to a funny text",
+          "answer": "LMAO"
+        },
+        {
+          "num": 6,
+          "text": "Like beer from the tap, often",
+          "answer": "FOAMY"
+        },
+        {
+          "num": 7,
+          "text": "Move like honey",
+          "answer": "OOZE"
+        },
+        {
+          "num": 8,
+          "text": "Group of Marvel superheroes",
+          "answer": "XMEN"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "Open up, as a flower",
+          "answer": "BLOOM"
+        },
+        {
+          "num": 2,
+          "text": "Wow",
+          "answer": "AMAZE"
+        },
+        {
+          "num": 3,
+          "text": "Noodle dish in a rich broth",
+          "answer": "RAMEN"
+        },
+        {
+          "num": 4,
+          "text": "Happy Meal inclusion",
+          "answer": "TOY"
+        },
+        {
+          "num": 6,
+          "text": "Animal known scientifically as \"Vulpes vulpes\"",
+          "answer": "FOX"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-19",
+    "size": [
+      8,
+      6
+    ],
+    "grid": [
+      [
+        "A",
+        "I",
+        "R",
+        "B",
+        "N",
+        "B"
+      ],
+      [
+        "I",
+        "C",
+        "E",
+        "A",
+        "G",
+        "E"
+      ],
+      [
+        "D",
+        "A",
+        "D",
+        "B",
+        "O",
+        "D"
+      ],
+      [
+        "A",
+        "N",
+        "D",
+        "Y",
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        "I",
+        "T",
+        "T",
+        "Y"
+      ],
+      [
+        "O",
+        "T",
+        "T",
+        "A",
+        "W",
+        "A"
+      ],
+      [
+        "F",
+        "O",
+        "O",
+        "L",
+        "E",
+        "R"
+      ],
+      [
+        "F",
+        "O",
+        "R",
+        "K",
+        "E",
+        "D"
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "Vacation rental",
+          "answer": "AIRBNB"
+        },
+        {
+          "num": 7,
+          "text": "When woolly mammoths and saber-toothed tigers roamed the earth",
+          "answer": "ICEAGE"
+        },
+        {
+          "num": 8,
+          "text": "Father figure?",
+          "answer": "DADBOD"
+        },
+        {
+          "num": 9,
+          "text": "Comedian Samberg",
+          "answer": "ANDY"
+        },
+        {
+          "num": 10,
+          "text": "___-bitty",
+          "answer": "ITTY"
+        },
+        {
+          "num": 13,
+          "text": "Canada's capital",
+          "answer": "OTTAWA"
+        },
+        {
+          "num": 15,
+          "text": "April 1st prankster",
+          "answer": "FOOLER"
+        },
+        {
+          "num": 16,
+          "text": "Like the tongues of snakes",
+          "answer": "FORKED"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "Famed opera with over 1,000 performances at the Met",
+          "answer": "AIDA"
+        },
+        {
+          "num": 2,
+          "text": "\"As far as ___ tell ...\"",
+          "answer": "ICAN"
+        },
+        {
+          "num": 3,
+          "text": "Frequent visitor to websites with \"r/\" in their names",
+          "answer": "REDDITOR"
+        },
+        {
+          "num": 4,
+          "text": "Wittle, e.g.",
+          "answer": "BABYTALK"
+        },
+        {
+          "num": 5,
+          "text": "Many a foreign aid grp.",
+          "answer": "NGO"
+        },
+        {
+          "num": 6,
+          "text": "What a convertible sofa converts into",
+          "answer": "BED"
+        },
+        {
+          "num": 11,
+          "text": "Overly cutesy",
+          "answer": "TWEE"
+        },
+        {
+          "num": 12,
+          "text": "Football field unit",
+          "answer": "YARD"
+        },
+        {
+          "num": 13,
+          "text": "Not working today",
+          "answer": "OFF"
+        },
+        {
+          "num": 14,
+          "text": "In addition",
+          "answer": "TOO"
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-09-20",
+    "size": [
+      5,
+      5
+    ],
+    "grid": [
+      [
+        null,
+        "G",
+        "A",
+        "G",
+        null
+      ],
+      [
+        "U",
+        "M",
+        "B",
+        "E",
+        "R"
+      ],
+      [
+        "M",
+        "A",
+        "I",
+        "N",
+        "E"
+      ],
+      [
+        "S",
+        "I",
+        "D",
+        "E",
+        "D"
+      ],
+      [
+        null,
+        "L",
+        "E",
+        "S",
+        null
+      ]
+    ],
+    "clues": {
+      "across": [
+        {
+          "num": 1,
+          "text": "Running joke",
+          "answer": "GAG"
+        },
+        {
+          "num": 4,
+          "text": "Shade of brown that becomes a shade of gold if you change its first letter to an \"A\"",
+          "answer": "UMBER"
+        },
+        {
+          "num": 6,
+          "text": "State that shares the same first and last letters with MOOSE, appropriately",
+          "answer": "MAINE"
+        },
+        {
+          "num": 7,
+          "text": "Joined teams (with)",
+          "answer": "SIDED"
+        },
+        {
+          "num": 8,
+          "text": "\"___ Mis\u00e9rables\"",
+          "answer": "LES"
+        }
+      ],
+      "down": [
+        {
+          "num": 1,
+          "text": "App with an envelope logo",
+          "answer": "GMAIL"
+        },
+        {
+          "num": 2,
+          "text": "Withstand",
+          "answer": "ABIDE"
+        },
+        {
+          "num": 3,
+          "text": "Things that might make your hair curl?",
+          "answer": "GENES"
+        },
+        {
+          "num": 4,
+          "text": "Sounds of hesitation",
+          "answer": "UMS"
+        },
+        {
+          "num": 5,
+          "text": "Vibrant color for a sugar maple in autumn",
+          "answer": "RED"
+        }
+      ]
+    }
+  }
+]

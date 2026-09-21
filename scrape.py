@@ -1,0 +1,57 @@
+"""Throwaway scraper: pulls NYT Mini puzzles via Playwright into puzzles.json."""
+import json
+from datetime import date, timedelta
+
+from playwright.sync_api import sync_playwright
+
+END = date(2026, 9, 20)
+DAYS = 10
+DATES = [END - timedelta(days=i) for i in range(DAYS)]
+
+
+def normalize(d, data):
+    p = data["body"][0]
+    w, h = p["dimensions"]["width"], p["dimensions"]["height"]
+    cells = p["cells"]
+    grid = [[cells[r * w + c].get("answer") for c in range(w)] for r in range(h)]
+    clues = {"across": [], "down": []}
+    for cl in p["clues"]:
+        text = cl["text"]
+        if isinstance(text, list):
+            text = "".join(t.get("plain", "") for t in text)
+        answer = "".join(cells[i].get("answer") or "?" for i in cl["cells"])
+        clues[cl["direction"].lower()].append(
+            {"num": int(cl["label"]), "text": text, "answer": answer}
+        )
+    return {"date": d.isoformat(), "size": [h, w], "grid": grid, "clues": clues}
+
+
+def main():
+    out = []
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        ctx = browser.new_context(viewport={"width": 1280, "height": 900})
+        for d in DATES:
+            url = f"https://www.nytimes.com/crosswords/game/mini/{d:%Y/%m/%d}"
+            page = ctx.new_page()
+            try:
+                with page.expect_response(
+                    lambda r: "/svc/crosswords/v" in r.url and "puzzle" in r.url and r.status == 200,
+                    timeout=20000,
+                ) as resp:
+                    page.goto(url, wait_until="domcontentloaded")
+                out.append(normalize(d, resp.value.json()))
+                print("ok  ", d)
+            except Exception as e:
+                print("FAIL", d, type(e).__name__, str(e)[:120])
+            finally:
+                page.close()
+        browser.close()
+    out.sort(key=lambda p: p["date"])
+    with open("public/puzzles.json", "w") as f:
+        json.dump(out, f, indent=2)
+    print(f"wrote {len(out)} puzzles")
+
+
+if __name__ == "__main__":
+    main()
