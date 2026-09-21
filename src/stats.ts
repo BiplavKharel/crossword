@@ -54,7 +54,8 @@ export function resetStats(userId: string) {
   }
 }
 
-export const playedToday = (s: Stats) => s.lastPlayed === dayString();
+// Daily play limit disabled for now — always report as not played today.
+export const playedToday = (_s: Stats) => false;
 
 /** A streak survives only if the last game was today or yesterday. */
 export const currentStreak = (s: Stats) => (s.lastPlayed === dayString() || s.lastPlayed === yesterday() ? s.streak : 0);
