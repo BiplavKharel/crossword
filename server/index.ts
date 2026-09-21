@@ -5,7 +5,7 @@ import { clientIdFromEnv, googleVerifier } from './verify.js';
 const port = Number(process.env.PORT ?? 8787);
 const app = createApp(googleVerifier(clientIdFromEnv()), {
   puzzles,
-  allowedOrigin: process.env.ALLOWED_ORIGIN,
+  allowedOrigins: process.env.ALLOWED_ORIGINS,
   allowGuest: process.env.ALLOW_GUEST === '1',
 });
 app.listen(port, err => {
