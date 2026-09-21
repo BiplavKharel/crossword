@@ -29,7 +29,7 @@ export function Login({ onLogin }: { onLogin: (u: User) => void }) {
   return (
     <div className="login">
       <div className="login-card">
-        <h1>The Mini <em>1v1</em></h1>
+        <h1>Cross<em>Duel</em></h1>
         <p>Race a friend to finish the same 5×5 crossword.</p>
         {CLIENT_ID ? (
           <div ref={button} className="google-btn" />

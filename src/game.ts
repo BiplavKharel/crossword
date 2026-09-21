@@ -16,10 +16,10 @@ export type Action =
   | { type: 'arrow'; key: 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown' }
   | { type: 'nextClue'; back: boolean };
 
-export function initGame(p: Puzzle): GameState {
+export function initGame(p: Puzzle, letters: Letters = emptyLetters(p.size)): GameState {
   for (let r = 0; r < p.size; r++) {
     for (let c = 0; c < p.size; c++) {
-      if (p.playable[r][c]) return { letters: emptyLetters(p.size), sel: [r, c], dir: p.wordAt[r][c].across ? 'across' : 'down' };
+      if (p.playable[r][c]) return { letters, sel: [r, c], dir: p.wordAt[r][c].across ? 'across' : 'down' };
     }
   }
   throw new Error('puzzle has no open cells');

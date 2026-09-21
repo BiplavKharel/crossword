@@ -14,10 +14,10 @@ function SvgBoard({ size, label, children }: { size: number; label: string; chil
     return `M${PAD},${p} l${span},0 M${p},${PAD} l0,${span}`;
   }).join(' ');
   return (
-    <svg className="board" viewBox={`0 0 ${total} ${total}`} preserveAspectRatio="xMidYMin meet" aria-label={label}>
-      <g role="grid">{children}</g>
-      <path d={lines} stroke="dimgray" vectorEffect="non-scaling-stroke" fill="none" />
-      <rect x={PAD / 2} y={PAD / 2} width={span + PAD} height={span + PAD} stroke="black" strokeWidth={PAD} fill="none" />
+    <svg className="board" viewBox={`0 0 ${total} ${total}`} preserveAspectRatio="xMidYMin meet" role="group" aria-label={label}>
+      {children}
+      <path className="board-lines" d={lines} vectorEffect="non-scaling-stroke" fill="none" />
+      <rect className="board-frame" x={PAD / 2} y={PAD / 2} width={span + PAD} height={span + PAD} strokeWidth={PAD} fill="none" />
     </svg>
   );
 }
@@ -35,24 +35,28 @@ export function MyBoard({ puzzle, letters, sel, dir, onSelect }: MineProps) {
   const inWord = (r: number, c: number) => !!word?.cells.some(([wr, wc]) => wr === r && wc === c);
   return (
     <SvgBoard size={puzzle.size} label="Your puzzle board">
-      {puzzle.playable.map((row, r) =>
-        row.map((v, c) => {
-          const x = at(c), y = at(r);
-          if (!v) return <rect key={`${r}-${c}`} className="cell block" x={x} y={y} width={CELL} height={CELL} />;
-          const isSel = r === sel[0] && c === sel[1];
-          const cls = ['cell', isSel ? 'sel' : inWord(r, c) ? 'word' : ''].join(' ');
-          const num = puzzle.numbers[r][c];
-          return (
-            <g key={`${r}-${c}`} role="row" onClick={() => onSelect([r, c])}>
-              <rect className={cls} x={x} y={y} width={CELL} height={CELL} role="cell" aria-selected={isSel} />
-              {num > 0 && <text className="cell-num" x={x + 2} y={y + 21} fontSize={CELL * 0.26}>{num}</text>}
-              <text className="cell-letter" x={x + CELL / 2} y={y + CELL - 3} textAnchor="middle" fontSize={(CELL * 2) / 3}>
-                {letters[r][c]}
-              </text>
-            </g>
-          );
-        }),
-      )}
+      <g role="grid" aria-label="Crossword grid">
+        {puzzle.playable.map((row, r) => (
+          <g key={r} role="row">
+            {row.map((open, c) => {
+              const x = at(c), y = at(r);
+              if (!open) return <rect key={c} className="cell block" x={x} y={y} width={CELL} height={CELL} aria-hidden="true" />;
+              const isSel = r === sel[0] && c === sel[1];
+              const num = puzzle.numbers[r][c];
+              const label = `${num ? `${num}, ` : ''}row ${r + 1}, column ${c + 1}, ${letters[r][c] || 'blank'}`;
+              return (
+                <g key={c} role="gridcell" aria-label={label} aria-selected={isSel} onClick={() => onSelect([r, c])}>
+                  <rect className={`cell ${isSel ? 'sel' : inWord(r, c) ? 'word' : ''}`} x={x} y={y} width={CELL} height={CELL} />
+                  {num > 0 && <text className="cell-num" x={x + 2} y={y + 21} fontSize={CELL * 0.26} aria-hidden="true">{num}</text>}
+                  <text className={`cell-letter ${isSel ? 'on-sel' : ''}`} x={x + CELL / 2} y={y + CELL - 3} textAnchor="middle" fontSize={(CELL * 2) / 3} aria-hidden="true">
+                    {letters[r][c]}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        ))}
+      </g>
     </SvgBoard>
   );
 }
@@ -61,19 +65,19 @@ interface OpponentProps {
   puzzle: Puzzle;
   /** Which cells the opponent has filled. Deliberately carries no letters. */
   filled: boolean[][];
+  name: string;
 }
 
-export function OpponentBoard({ puzzle, filled }: OpponentProps) {
+export function OpponentBoard({ puzzle, filled, name }: OpponentProps) {
   return (
-    <SvgBoard size={puzzle.size} label="Opponent's puzzle board, letters hidden">
+    <SvgBoard size={puzzle.size} label={`${name}'s board. Letters are hidden.`}>
       {puzzle.playable.map((row, r) =>
-        row.map((v, c) => {
+        row.map((open, c) => {
           const x = at(c), y = at(r);
-          const cls = v ? (filled[r][c] ? 'cell filled' : 'cell') : 'cell block';
           return (
-            <g key={`${r}-${c}`}>
-              <rect className={cls} x={x} y={y} width={CELL} height={CELL} />
-              {v && filled[r][c] && <circle className="cell-dot" cx={x + CELL / 2} cy={y + CELL / 2} r={CELL * 0.15} />}
+            <g key={`${r}-${c}`} aria-hidden="true">
+              <rect className={`cell ${open ? (filled[r][c] ? 'filled' : '') : 'block'}`} x={x} y={y} width={CELL} height={CELL} />
+              {open && filled[r][c] && <circle className="cell-dot" cx={x + CELL / 2} cy={y + CELL / 2} r={CELL * 0.15} />}
             </g>
           );
         }),
