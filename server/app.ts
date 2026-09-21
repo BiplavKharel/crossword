@@ -15,7 +15,8 @@ export type Verifier = (idToken: string) => Promise<Claims>;
 
 export interface AppOptions {
   puzzles: RawPuzzle[];
-  allowedOrigin?: string;
+  /** Origins allowed to call the API (comma-separated). A native mobile app sends no Origin header, so it isn't affected by this. */
+  allowedOrigins?: string;
   /** Local development only: accepts `Bearer guest` as a signed-in user. */
   allowGuest?: boolean;
 }
@@ -38,11 +39,16 @@ const toPublic = (p: RawPuzzle): ApiPuzzle => ({
 
 const bearer = (req: Request) => /^Bearer (.+)$/.exec(req.header('authorization') ?? '')?.[1];
 
-export function createApp(verify: Verifier, { puzzles, allowedOrigin, allowGuest = false }: AppOptions) {
+export function createApp(verify: Verifier, { puzzles, allowedOrigins, allowGuest = false }: AppOptions) {
   const playable = puzzles.filter(p => p.size[0] === 5 && p.size[1] === 5);
   const app = express();
   app.use(express.json());
-  if (allowedOrigin) app.use(cors({ origin: allowedOrigin }));
+  if (allowedOrigins) {
+    const origins = allowedOrigins.split(',').map(o => o.trim());
+    app.use(cors({ origin: origins }));
+  }
+
+  app.get('/health', (_req, res) => res.json({ ok: true }));
 
   const requireUser = async (req: Request, res: Response, next: NextFunction) => {
     const token = bearer(req);

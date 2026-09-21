@@ -8,6 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "server": "ALLOW_GUEST=1 tsx --env-file-if-exists=.env.local server/index.ts",
+    "server:build": "tsc -p tsconfig.server.json",
+    "server:start": "node dist-server/server/index.js",
     "test": "tsx --test \"server/*.test.ts\" \"src/*.test.ts\""
   },
   "dependencies": {
