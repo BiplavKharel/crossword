@@ -1,0 +1,57 @@
+name: Deploy server to AWS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'src/types.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.server.json'
+      - '.github/workflows/server-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: server-deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        env:
+          REPO: ${{ steps.ecr.outputs.registry }}/crossword-server
+        run: |
+          docker build --platform linux/amd64 -f server/Dockerfile -t "$REPO:latest" -t "$REPO:${GITHUB_SHA}" .
+          docker push "$REPO:latest"
+          docker push "$REPO:${GITHUB_SHA}"
+
+      - name: Roll the ECS service
+        run: |
+          aws ecs update-service --cluster crossword --service crossword-server --force-new-deployment >/dev/null
+          aws ecs wait services-stable --cluster crossword --services crossword-server

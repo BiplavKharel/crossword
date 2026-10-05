@@ -1,1 +1,10 @@
+node_modules
+.git
+.github
+infra
+dist
+dist-server
+.env*
+*.md
 fly.toml
+__pycache__

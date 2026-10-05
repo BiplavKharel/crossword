@@ -91,3 +91,48 @@ test('guest token only works when explicitly allowed', async () => {
   assert.equal((await fetch(`${base}/api/me`, { headers: guest })).status, 401);
   assert.equal((await fetch(`${baseGuest}/api/me`, { headers: guest })).status, 200);
 });
+
+test('verify: wrong guesses are capped per user and puzzle, then answer 429', async () => {
+  const s = createApp(verify, { puzzles: [puzzle], maxWrongAttempts: 2 }).listen(0);
+  const b = `http://localhost:${(s.address() as AddressInfo).port}`;
+  try {
+    const wrong = solution.map(r => [...r]);
+    wrong[2][2] = 'B';
+    const verifyAs = (letters: string[][]) => post('/api/puzzles/2026-01-01/verify', { letters }, authed, b);
+    assert.deepEqual(await (await verifyAs(wrong)).json(), { solved: false });
+    assert.deepEqual(await (await verifyAs(wrong)).json(), { solved: false });
+    const blocked = await verifyAs(wrong);
+    assert.equal(blocked.status, 429);
+    assert.ok(Number(blocked.headers.get('retry-after')) > 0);
+    // Locked out even with the right answer, so a brute-forcer can't just try again.
+    assert.equal((await verifyAs(solution)).status, 429);
+  } finally {
+    s.close();
+  }
+});
+test('verify: correct answers do not count toward the cap', async () => {
+  const s = createApp(verify, { puzzles: [puzzle], maxWrongAttempts: 1 }).listen(0);
+  const b = `http://localhost:${(s.address() as AddressInfo).port}`;
+  try {
+    for (let i = 0; i < 3; i++) {
+      assert.equal((await post('/api/puzzles/2026-01-01/verify', { letters: solution }, authed, b)).status, 200);
+    }
+  } finally {
+    s.close();
+  }
+});
+test('verify: a failing attempt store does not break the game', async () => {
+  const broken = {
+    wrongCount: async () => { throw new Error('ddb down'); },
+    addWrong: async () => { throw new Error('ddb down'); },
+  };
+  const s = createApp(verify, { puzzles: [puzzle], attempts: broken }).listen(0);
+  const b = `http://localhost:${(s.address() as AddressInfo).port}`;
+  try {
+    const wrong = solution.map(r => [...r]);
+    wrong[2][2] = 'B';
+    assert.deepEqual(await (await post('/api/puzzles/2026-01-01/verify', { letters: wrong }, authed, b)).json(), { solved: false });
+  } finally {
+    s.close();
+  }
+});

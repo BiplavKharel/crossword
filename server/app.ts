@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import type { ApiPuzzle, RawPuzzle } from '../src/types.js';
+import { memoryStore, WINDOW_SECONDS, type AttemptStore } from './store.js';
 
 export interface Claims {
   sub: string;
@@ -19,6 +20,10 @@ export interface AppOptions {
   allowedOrigins?: string;
   /** Local development only: accepts `Bearer guest` as a signed-in user. */
   allowGuest?: boolean;
+  /** Counts wrong guesses per user and puzzle; defaults to per-process memory. */
+  attempts?: AttemptStore;
+  /** Wrong guesses allowed per user, puzzle and hour before verify answers 429. */
+  maxWrongAttempts?: number;
 }
 
 const GUEST: Claims = { sub: 'guest', email: '', name: 'Guest', exp: Number.MAX_SAFE_INTEGER };
@@ -39,7 +44,10 @@ const toPublic = (p: RawPuzzle): ApiPuzzle => ({
 
 const bearer = (req: Request) => /^Bearer (.+)$/.exec(req.header('authorization') ?? '')?.[1];
 
-export function createApp(verify: Verifier, { puzzles, allowedOrigins, allowGuest = false }: AppOptions) {
+export function createApp(
+  verify: Verifier,
+  { puzzles, allowedOrigins, allowGuest = false, attempts = memoryStore(), maxWrongAttempts = 20 }: AppOptions,
+) {
   const playable = puzzles.filter(p => p.size[0] === 5 && p.size[1] === 5);
   const app = express();
   app.use(express.json());
@@ -85,7 +93,7 @@ export function createApp(verify: Verifier, { puzzles, allowedOrigins, allowGues
   });
 
   // The server holds the solution, so it is the only place a win can be confirmed.
-  app.post('/api/puzzles/:id/verify', requireUser, (req, res) => {
+  app.post('/api/puzzles/:id/verify', requireUser, async (req, res) => {
     const puzzle = playable.find(p => p.date === req.params.id);
     if (!puzzle) return void res.status(404).json({ error: 'unknown puzzle' });
     const n = puzzle.size[0];
@@ -96,7 +104,21 @@ export function createApp(verify: Verifier, { puzzles, allowedOrigins, allowGues
       letters.every(row => Array.isArray(row) && row.length === n && row.every(c => typeof c === 'string' && c.length <= 1));
     if (!wellFormed) return void res.status(400).json({ error: 'letters must be an n x n grid of single characters' });
     const grid = letters as string[][];
+
+    // Cap wrong guesses so a signed-in user can't brute-force the answers. If the store is
+    // down we let the request through (and log it) rather than break the game.
+    const sub: string = res.locals.user.sub;
+    try {
+      if ((await attempts.wrongCount(sub, puzzle.date)) >= maxWrongAttempts) {
+        res.set('Retry-After', String(WINDOW_SECONDS));
+        return void res.status(429).json({ error: 'too many wrong attempts, try again later' });
+      }
+    } catch (err) {
+      console.error('attempt store read failed', err);
+    }
+
     const solved = puzzle.grid.every((row, r) => row.every((answer, c) => (answer ?? '') === grid[r][c].toUpperCase()));
+    if (!solved) await attempts.addWrong(sub, puzzle.date).catch(err => console.error('attempt store write failed', err));
     res.json({ solved });
   });
 
