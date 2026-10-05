@@ -30,3 +30,18 @@ export const fetchStats = (user: User) => call<{ stats: Stats }>(user, '/api/sta
 /** Reports a finished game. A win is only accepted after the server confirmed the solve. */
 export const postResult = (user: User, won: boolean, seconds: number, day: string) =>
   call<{ stats: Stats }>(user, '/api/stats/result', { method: 'POST', body: JSON.stringify({ won, seconds, day }) }).then(r => r.stats);
+
+/** One finished match, from the player's side. Mirrors the server's `MatchRecord`. */
+export interface HistoryMatch {
+  matchId: string;
+  at: number;
+  opponent: string;
+  vsBot: boolean;
+  won: boolean;
+  reason: 'solved' | 'forfeit';
+  seconds: number;
+  puzzleDate: string;
+}
+
+export const fetchHistory = (user: User, before?: string) =>
+  call<{ matches: HistoryMatch[]; next?: string }>(user, `/api/history?limit=20${before ? `&before=${encodeURIComponent(before)}` : ''}`);

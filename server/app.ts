@@ -166,6 +166,20 @@ export function createApp(
     }
   });
 
+  // The player's finished matches, newest first, a page at a time.
+  app.get('/api/history', requireUser, async (req, res) => {
+    const limit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+    const before = req.query.before;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) return void res.status(400).json({ error: 'limit must be 1 to 50' });
+    if (before !== undefined && (typeof before !== 'string' || !/^MATCH#\d{13}#[\w-]+$/.test(before))) return void res.status(400).json({ error: 'bad cursor' });
+    try {
+      res.json(await store.listMatches(res.locals.user.sub, limit, before));
+    } catch (err) {
+      console.error('history read failed', err);
+      res.status(503).json({ error: 'try again' });
+    }
+  });
+
   // Record a finished game. A loss is taken at the player's word (it only hurts them); a win
   // needs a solve the server confirmed, and its time can't beat the server's own clock.
   app.post('/api/stats/result', requireUser, async (req, res) => {

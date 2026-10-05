@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { DeleteCommand, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { dynamoStore, memoryStore, WINDOW_SECONDS, type DocClient } from './store.js';
+import { DeleteCommand, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { dynamoStore, matchKey, memoryStore, WINDOW_SECONDS, type DocClient, type MatchRecord, type Store } from './store.js';
 
 const HOUR = WINDOW_SECONDS * 1000;
 
@@ -79,6 +79,15 @@ function fakeTable(opts: { failPuts?: number } = {}) {
         items.set(id(item), item);
         return {};
       }
+      if (cmd instanceof QueryCommand) {
+        const v = cmd.input.ExpressionAttributeValues!;
+        let rows = [...items.values()]
+          .filter(i => i.pk === v[':pk'] && (i.sk as string) >= (v[':lo'] as string) && (i.sk as string) <= (v[':hi'] as string))
+          .sort((a, b) => ((a.sk as string) < (b.sk as string) ? 1 : -1)); // ScanIndexForward: false
+        const start = cmd.input.ExclusiveStartKey?.sk as string | undefined;
+        if (start !== undefined) rows = rows.filter(i => (i.sk as string) < start); // exclusive, like DynamoDB
+        return { Items: rows.slice(0, cmd.input.Limit) };
+      }
       throw new Error(`unexpected ${(cmd as object).constructor.name}`);
     },
   } as unknown as DocClient;
@@ -136,4 +145,67 @@ test('dynamo play record round-trips with a TTL, and can be dropped', async () =
   assert.deepEqual(await s.getPlay('u1'), { puzzleId: 'p', startedAt: 5_000_000, solvedAt: undefined });
   await s.deletePlay('u1');
   assert.equal(await s.getPlay('u1'), undefined);
+});
+
+// ---- match history
+
+const rec = (n: number, over: Partial<MatchRecord> = {}): MatchRecord => ({
+  matchId: `m${n}`, at: 1_700_000_000_000 + n * 1000, opponent: 'Maya', vsBot: true, won: true, reason: 'solved', seconds: 40 + n, puzzleDate: '2026-01-01', ...over,
+});
+
+/** The same behavior is required of both stores, so run one set of checks against each. */
+const historyStores: [string, () => Store][] = [
+  ['memory', () => memoryStore()],
+  ['dynamo', () => dynamoStore('tbl', fakeTable().doc)],
+];
+
+for (const [name, make] of historyStores) {
+  test(`${name} history lists matches newest first, per player`, async () => {
+    const s = make();
+    for (const n of [2, 5, 1, 4, 3]) await s.putMatch('u1', rec(n));
+    await s.putMatch('u2', rec(9, { opponent: 'Someone' }));
+    assert.deepEqual((await s.listMatches('u1', 10)).matches.map(m => m.matchId), ['m5', 'm4', 'm3', 'm2', 'm1']);
+    assert.deepEqual((await s.listMatches('u2', 10)).matches.map(m => m.opponent), ['Someone']);
+    assert.deepEqual(await s.listMatches('nobody', 10), { matches: [] });
+  });
+
+  test(`${name} history pages without gaps or repeats, and the last page has no cursor`, async () => {
+    const s = make();
+    for (let n = 1; n <= 5; n++) await s.putMatch('u1', rec(n));
+    const first = await s.listMatches('u1', 2);
+    assert.deepEqual(first.matches.map(m => m.matchId), ['m5', 'm4']);
+    assert.equal(first.next, matchKey(rec(4)));
+    const second = await s.listMatches('u1', 2, first.next);
+    assert.deepEqual(second.matches.map(m => m.matchId), ['m3', 'm2']);
+    const last = await s.listMatches('u1', 2, second.next);
+    assert.deepEqual(last.matches.map(m => m.matchId), ['m1']);
+    assert.equal(last.next, undefined);
+  });
+
+  test(`${name} history has no cursor when the last page is exactly full`, async () => {
+    const s = make();
+    for (let n = 1; n <= 4; n++) await s.putMatch('u1', rec(n));
+    const second = await s.listMatches('u1', 2, (await s.listMatches('u1', 2)).next);
+    assert.deepEqual(second.matches.map(m => m.matchId), ['m2', 'm1']);
+    assert.equal(second.next, undefined);
+  });
+
+  test(`${name} history keeps every field and counts a match once`, async () => {
+    const s = make();
+    const r = rec(1, { won: false, reason: 'forfeit', vsBot: false, opponent: 'Priya' });
+    await s.putMatch('u1', r);
+    await s.putMatch('u1', r); // a retried write must not double up
+    assert.deepEqual((await s.listMatches('u1', 10)).matches, [r]);
+  });
+}
+
+test('dynamo history is stored under the player with a one-year TTL, apart from stats and plays', async () => {
+  const { doc, items } = fakeTable();
+  const s = dynamoStore('tbl', doc);
+  await s.putMatch('u1', rec(1));
+  await s.updateStats('u1', x => ({ ...x, played: 1 }));
+  await s.putPlay('u1', { puzzleId: 'p', startedAt: 1 });
+  const item = items.get(`USER#u1|${matchKey(rec(1))}`);
+  assert.equal(item?.ttl, 1_700_000_001 + 365 * 24 * 60 * 60);
+  assert.equal((await s.listMatches('u1', 10)).matches.length, 1); // STATS and PLAY items are not matches
 });

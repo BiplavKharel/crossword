@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { Claims } from './app.js';
 import { emptyStats, type Stats } from './stats.js';
 
@@ -10,6 +10,27 @@ export interface Play {
   startedAt: number;
   /** Epoch ms of the first correct verify, if any. */
   solvedAt?: number;
+}
+
+/** One finished match, from one player's point of view. */
+export interface MatchRecord {
+  matchId: string;
+  /** Epoch ms when the match ended. */
+  at: number;
+  opponent: string;
+  vsBot: boolean;
+  won: boolean;
+  /** `forfeit` means the loser left, or timed out after disconnecting. */
+  reason: 'solved' | 'forfeit';
+  seconds: number;
+  puzzleDate: string;
+}
+
+export interface HistoryPage {
+  /** Newest first. */
+  matches: MatchRecord[];
+  /** Pass back as `before` for the next (older) page. Absent on the last page. */
+  next?: string;
 }
 
 export interface Store {
@@ -30,10 +51,19 @@ export interface Store {
   getPlay(sub: string): Promise<Play | undefined>;
   putPlay(sub: string, play: Play): Promise<void>;
   deletePlay(sub: string): Promise<void>;
+
+  putMatch(sub: string, record: MatchRecord): Promise<void>;
+  /** A player's matches, newest first. `before` is a cursor from a previous page's `next`. */
+  listMatches(sub: string, limit: number, before?: string): Promise<HistoryPage>;
 }
 
 export const WINDOW_SECONDS = 60 * 60;
 const PLAY_TTL_SECONDS = 24 * 60 * 60;
+/** Match history is kept for a year, then DynamoDB's TTL sweeps it away. */
+const HISTORY_TTL_SECONDS = 365 * 24 * 60 * 60;
+
+/** Sorts by end time: fixed-width milliseconds, then the match id to break ties. */
+export const matchKey = (r: Pick<MatchRecord, 'at' | 'matchId'>) => `MATCH#${String(r.at).padStart(13, '0')}#${r.matchId}`;
 
 const bucket = (nowMs: number) => Math.floor(nowMs / 1000 / WINDOW_SECONDS);
 
@@ -43,6 +73,7 @@ export function memoryStore(now: () => number = Date.now): Store {
   const sessions = new Map<string, Claims>();
   const stats = new Map<string, Stats>();
   const plays = new Map<string, Play>();
+  const history = new Map<string, MatchRecord[]>();
   const key = (sub: string, puzzleId: string) => `${sub}#${puzzleId}#${bucket(now())}`;
   return {
     async wrongCount(sub, puzzleId) {
@@ -79,6 +110,15 @@ export function memoryStore(now: () => number = Date.now): Store {
     async deletePlay(sub) {
       plays.delete(sub);
     },
+    async putMatch(sub, record) {
+      history.set(sub, [...(history.get(sub) ?? []).filter(r => r.matchId !== record.matchId), record]);
+    },
+    async listMatches(sub, limit, before) {
+      const newestFirst = [...(history.get(sub) ?? [])].sort((a, b) => (matchKey(a) < matchKey(b) ? 1 : -1));
+      const older = before ? newestFirst.filter(r => matchKey(r) < before) : newestFirst;
+      const matches = older.slice(0, limit);
+      return older.length > limit ? { matches, next: matchKey(matches[matches.length - 1]) } : { matches };
+    },
   };
 }
 
@@ -96,7 +136,18 @@ const toStats = (i: Record<string, unknown>): Stats => ({
   lastPlayed: (i.lastPlayed as string | null | undefined) ?? null,
 });
 
-const isConditionFailure =(e: unknown) => (e as { name?: string })?.name === 'ConditionalCheckFailedException';
+const toMatch = (i: Record<string, unknown>): MatchRecord => ({
+  matchId: i.matchId as string,
+  at: i.at as number,
+  opponent: i.opponent as string,
+  vsBot: i.vsBot as boolean,
+  won: i.won as boolean,
+  reason: i.reason as 'solved' | 'forfeit',
+  seconds: i.seconds as number,
+  puzzleDate: i.puzzleDate as string,
+});
+
+const isConditionFailure = (e: unknown) => (e as { name?: string })?.name === 'ConditionalCheckFailedException';
 
 /**
  * Single-table layout (all items carry a `ttl` where they should expire; DynamoDB's TTL sweep is
@@ -179,6 +230,31 @@ export function dynamoStore(table: string, doc: DocClient = dynamoClient(), now:
     },
     async deletePlay(sub) {
       await doc.send(new DeleteCommand({ TableName: table, Key: user(sub, 'PLAY') }));
+    },
+
+    async putMatch(sub, record) {
+      await doc.send(
+        new PutCommand({
+          TableName: table,
+          Item: { ...user(sub, matchKey(record)), ...record, ttl: Math.floor(record.at / 1000) + HISTORY_TTL_SECONDS },
+        }),
+      );
+    },
+    async listMatches(sub, limit, before) {
+      // One extra row tells us whether there is another page without an empty round trip.
+      const out = await doc.send(
+        new QueryCommand({
+          TableName: table,
+          KeyConditionExpression: 'pk = :pk AND sk BETWEEN :lo AND :hi',
+          ExpressionAttributeValues: { ':pk': `USER#${sub}`, ':lo': 'MATCH#', ':hi': 'MATCH#\uffff' },
+          ScanIndexForward: false,
+          Limit: limit + 1,
+          ...(before ? { ExclusiveStartKey: { pk: `USER#${sub}`, sk: before } } : {}),
+        }),
+      );
+      const rows = out.Items ?? [];
+      const matches = rows.slice(0, limit).map(toMatch);
+      return rows.length > limit ? { matches, next: rows[limit - 1].sk as string } : { matches };
     },
   };
 }

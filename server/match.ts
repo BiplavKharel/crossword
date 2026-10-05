@@ -328,12 +328,19 @@ export class MatchManager {
     match.result = { winner, seconds, reason };
 
     // A win by forfeit earns no time, so quitting early can't set a record.
+    const at = Date.now();
     await Promise.all(
-      match.seats.filter(seat => !seat.bot).map(seat =>
-        this.store
-          .updateStats(seat.sub, s => applyResult(s, seat === winner, seat === winner && reason === 'solved' ? seconds : null, seat.day))
-          .catch(err => console.error('stats write failed', err)),
-      ),
+      match.seats.filter(seat => !seat.bot).flatMap(seat => {
+        const opponent = this.opponentOf(match, seat);
+        return [
+          this.store
+            .updateStats(seat.sub, s => applyResult(s, seat === winner, seat === winner && reason === 'solved' ? seconds : null, seat.day))
+            .catch(err => console.error('stats write failed', err)),
+          this.store
+            .putMatch(seat.sub, { matchId: match.id, at, opponent: opponent.name, vsBot: opponent.bot, won: seat === winner, reason, seconds, puzzleDate: match.puzzle.date })
+            .catch(err => console.error('history write failed', err)),
+        ];
+      }),
     );
     for (const seat of match.seats) if (!seat.bot) this.sendResult(match, seat);
 

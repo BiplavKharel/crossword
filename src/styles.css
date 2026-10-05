@@ -157,6 +157,20 @@ main.waiting { filter: blur(6px); pointer-events: none; }
 .tile.hero .tile-label { color: var(--ink); }
 .play { width: 100%; padding: 16px; font-size: 18px; }
 .lobby-note { color: var(--muted); font-size: 14px; line-height: 1.4; }
+.lobby-links { display: flex; gap: 18px; justify-content: center; }
+
+.history { align-items: stretch; text-align: left; }
+.history .eyebrow, .history .lobby-name, .history > .lobby-note { text-align: center; }
+.history-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 8px; }
+.history-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: var(--tile); border-radius: 6px; padding: 10px 12px; }
+.history-badge { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; min-width: 52px; text-align: center; }
+.history-badge.win { color: var(--win); }
+.history-badge.lose { color: var(--lose); }
+.history-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.history-main b small { font-weight: 600; color: var(--muted); }
+.history-sub { color: var(--muted); font-size: 13px; }
+.history-time { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+.history .modal-actions { margin-top: 14px; }
 .dev { margin-top: 6px; font-size: 11px; padding: 5px 12px; }
 .queue { padding: 44px 32px; }
 .queue-time { font-size: 30px; font-weight: 300; font-variant-numeric: tabular-nums; }

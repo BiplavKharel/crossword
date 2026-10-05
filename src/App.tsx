@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Letters } from './types';
 import { Game } from './components/Game';
+import { History } from './components/History';
 import { LeaveDialog } from './components/LeaveDialog';
 import { Lobby } from './components/Lobby';
 import { Login } from './components/Login';
@@ -95,7 +96,7 @@ export default function App() {
     if (!user) return;
     if (route === '/queue' && playedToday(loadStats(user.id))) navigate('/', { replace: true });
     else if (gameId && match?.matchId !== gameId && !loadMatch(user.id)) navigate('/', { replace: true });
-    else if (route !== '/' && route !== '/queue' && !gameId) navigate('/', { replace: true });
+    else if (route !== '/' && route !== '/queue' && route !== '/history' && !gameId) navigate('/', { replace: true });
   }, [user, route, gameId, match, navigate]);
 
   const play = () => {
@@ -150,7 +151,8 @@ export default function App() {
         </div>
       </header>
       {error && <div className="status lose" role="alert">{error}</div>}
-      {client && route === '/' && <Lobby user={user} onPlay={play} />}
+      {client && route === '/' && <Lobby user={user} onPlay={play} onHistory={() => navigate('/history')} />}
+      {route === '/history' && <History user={user} onBack={() => navigate('/')} onUnauthorized={logout} />}
       {client && route === '/queue' && <Queue client={client} onMatched={onMatched} onCancel={() => navigate('/', { replace: true })} onError={onQueueError} />}
       {inGame && (
         <Game key={match.matchId} client={client} match={match} user={user} resumed={restored !== null} initialLetters={restored ?? undefined} onFinish={onFinish} onExit={exitToLobby} onLost={onMatchLost} />

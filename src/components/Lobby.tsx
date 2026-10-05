@@ -23,7 +23,7 @@ function Tile({ label, value, hero }: { label: string; value: string; hero?: boo
   );
 }
 
-export function Lobby({ user, onPlay }: { user: User; onPlay: () => void }) {
+export function Lobby({ user, onPlay, onHistory }: { user: User; onPlay: () => void; onHistory: () => void }) {
   const [stats, setStats] = useState(() => loadStats(user.id));
   const [wait, setWait] = useState(msUntilTomorrow);
   const [showHow, setShowHow] = useState(() => !seenHowTo());
@@ -63,7 +63,10 @@ export function Lobby({ user, onPlay }: { user: User; onPlay: () => void }) {
           {locked ? `You've played today. Next game in ${countdown(wait)}.` : 'One game a day. Win each day to build your streak.'}
         </p>
 
-        <button className="link" onClick={() => setShowHow(true)}>How to play</button>
+        <div className="lobby-links">
+          <button className="link" onClick={() => setShowHow(true)}>How to play</button>
+          <button className="link" onClick={onHistory}>History</button>
+        </div>
 
         {import.meta.env.DEV && (
           <button className="ghost-btn dev" onClick={() => { resetStats(user.id); setStats(loadStats(user.id)); }}>

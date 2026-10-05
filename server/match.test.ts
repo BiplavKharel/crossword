@@ -343,3 +343,52 @@ test('abandoning a bot match forfeits it after the grace', async () => {
   assert.equal((await store.getStats('a')).played, 1);
   assert.equal((await store.getStats('a')).wins, 0);
 });
+
+// ---- history
+
+test('a finished match is recorded for each human, from their own side', async () => {
+  const { a, b, matchId } = await pairedMatch();
+  mock.timers.tick(12_000);
+  await submit(a, solution);
+  const [ra] = (await store.listMatches('a', 10)).matches;
+  const [rb] = (await store.listMatches('b', 10)).matches;
+  assert.deepEqual(ra, { matchId, at: T0 + 8000 + 12_000, opponent: 'B', vsBot: false, won: true, reason: 'solved', seconds: 12, puzzleDate: '2026-01-01' });
+  assert.deepEqual(rb, { ...ra, opponent: 'A', won: false });
+  assert.equal(b.conn.of('result').length, 1);
+});
+
+test('forfeits and bot matches are recorded too', async () => {
+  const { a } = await pairedMatch();
+  await a.s.handle({ type: 'forfeit' });
+  assert.deepEqual((await store.listMatches('a', 10)).matches.map(m => [m.won, m.reason, m.vsBot]), [[false, 'forfeit', false]]);
+  assert.deepEqual((await store.listMatches('b', 10)).matches.map(m => [m.won, m.reason]), [[true, 'forfeit']]);
+
+  const c = await botMatch('c');
+  mock.timers.tick(5000);
+  await submit(c, solution);
+  const [rc] = (await store.listMatches('c', 10)).matches;
+  assert.equal(rc.vsBot, true);
+  assert.equal(rc.won, true);
+  assert.match(rc.opponent, /^(Maya|Jonas|Priya|Theo|Amara|Luca|Sana|Felix)$/);
+});
+
+test('a player who plays twice has both matches, newest first', async () => {
+  const { a } = await pairedMatch();
+  await a.s.handle({ type: 'forfeit' });
+  mock.timers.tick(1000);
+  await join(a);
+  await join(player('c'));
+  mock.timers.tick(8000);
+  await submit(a, solution);
+  assert.deepEqual((await store.listMatches('a', 10)).matches.map(m => m.won), [true, false]);
+});
+
+test('a failing history store does not stop the result', async () => {
+  const down = async () => { throw new Error('ddb down'); };
+  setup({ store: { ...memoryStore(), putMatch: down } });
+  const { a, b } = await pairedMatch();
+  await submit(a, solution);
+  assert.equal(a.conn.of('result').length, 1);
+  assert.equal(b.conn.of('result').length, 1);
+  assert.equal((await store.getStats('a')).wins, 1); // stats are still recorded
+});

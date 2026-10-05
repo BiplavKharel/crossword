@@ -223,3 +223,48 @@ test('a stats outage is a 503 and does not break verify', async () => {
   assert.equal((await call('/api/puzzles/random', token)).status, 200);
   assert.equal(((await (await call('/api/puzzles/2026-01-01/verify', token, { letters: solution })).json()) as { solved: boolean }).solved, true);
 });
+
+// ---- history
+
+const record = (n: number) => ({
+  matchId: `m${n}`, at: 1_700_000_000_000 + n * 1000, opponent: 'Maya', vsBot: true, won: n % 2 === 0, reason: 'solved' as const, seconds: 30 + n, puzzleDate: '2026-01-01',
+});
+
+test('history needs a signed-in user and starts empty', async () => {
+  const { call } = serve();
+  assert.equal((await call('/api/history')).status, 401);
+  const { token } = await login(call);
+  assert.deepEqual(await (await call('/api/history', token)).json(), { matches: [] });
+});
+
+test('history returns only your own matches, newest first, in pages', async () => {
+  const store = memoryStore();
+  for (let n = 1; n <= 5; n++) await store.putMatch('u1', record(n));
+  await store.putMatch('someone-else', record(9));
+  const { call } = serve({ store });
+  const { token } = await login(call);
+
+  const first = await (await call('/api/history?limit=2', token)).json();
+  assert.deepEqual(first.matches.map((m: { matchId: string }) => m.matchId), ['m5', 'm4']);
+  assert.ok(first.next);
+  const second = await (await call(`/api/history?limit=2&before=${encodeURIComponent(first.next)}`, token)).json();
+  assert.deepEqual(second.matches.map((m: { matchId: string }) => m.matchId), ['m3', 'm2']);
+  const last = await (await call(`/api/history?limit=2&before=${encodeURIComponent(second.next)}`, token)).json();
+  assert.deepEqual(last.matches.map((m: { matchId: string }) => m.matchId), ['m1']);
+  assert.equal(last.next, undefined);
+  assert.equal((await (await call('/api/history', token)).json()).matches.length, 5); // default page holds them all
+});
+
+test('history rejects bad paging parameters', async () => {
+  const { call } = serve();
+  const { token } = await login(call);
+  for (const q of ['limit=0', 'limit=51', 'limit=abc', 'limit=1.5', 'before=nonsense', 'before=MATCH%23x', 'before=MATCH%23123%23a&before=b']) {
+    assert.equal((await call(`/api/history?${q}`, token)).status, 400, q);
+  }
+});
+
+test('a history outage is a 503', async () => {
+  const { call } = serve({ store: { ...memoryStore(), listMatches: async () => { throw new Error('ddb down'); } } });
+  const { token } = await login(call);
+  assert.equal((await call('/api/history', token)).status, 503);
+});
