@@ -11,7 +11,8 @@ beforeEach(() => store.clear());
 test('a first win starts a streak and sets best time', () => {
   const s = recordResult('u', true, 75);
   assert.deepEqual([s.played, s.wins, s.streak, s.bestTime], [1, 1, 1, 75]);
-  assert.equal(playedToday(s), true);
+  assert.equal(s.lastPlayed, dayString());
+  assert.equal(playedToday(s), false); // the daily limit is disabled
 });
 
 test('winning the day after extends the streak; best time only improves', () => {
