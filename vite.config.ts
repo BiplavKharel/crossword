@@ -6,5 +6,10 @@ export default defineConfig({
   base: './',
   envPrefix: ['VITE_', 'PUBLIC_'],
   plugins: [react()],
-  server: { proxy: { '/api': process.env.API_TARGET ?? 'http://localhost:8787' } },
+  server: {
+    proxy: {
+      '/api': process.env.API_TARGET ?? 'http://localhost:8787',
+      '/ws': { target: process.env.API_TARGET ?? 'http://localhost:8787', ws: true },
+    },
+  },
 });

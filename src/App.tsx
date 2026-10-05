@@ -115,18 +115,19 @@ export default function App() {
 
   const onFinish = useCallback((r: MatchResult) => {
     if (!user) return;
-    void reportResult(user, r.winner === 'me', r.seconds);
+    if (!client?.recordsResults) void reportResult(user, r.winner === 'me', r.seconds);
     activeRoute.current = null; // the game is over; leaving no longer forfeits anything
     clearMatch();
     setFinished(true);
-  }, [user]);
+  }, [user, client]);
 
   const exitToLobby = useCallback(() => { endMatch(); navigate('/', { replace: true }); }, [endMatch, navigate]);
+  const onMatchLost = useCallback(() => { setError('That match ended while you were away.'); exitToLobby(); }, [exitToLobby]);
 
   const confirmLeave = () => {
     if (user && match) {
       client?.forfeit();
-      void reportResult(user, false, Math.max(0, Math.round((Date.now() - match.startsAt) / 1000)));
+      if (!client?.recordsResults) void reportResult(user, false, Math.max(0, Math.round((Date.now() - match.startsAt) / 1000)));
     }
     exitToLobby();
   };
@@ -152,7 +153,7 @@ export default function App() {
       {client && route === '/' && <Lobby user={user} onPlay={play} />}
       {client && route === '/queue' && <Queue client={client} onMatched={onMatched} onCancel={() => navigate('/', { replace: true })} onError={onQueueError} />}
       {inGame && (
-        <Game key={match.matchId} client={client} match={match} user={user} resumed={restored !== null} initialLetters={restored ?? undefined} onFinish={onFinish} onExit={exitToLobby} />
+        <Game key={match.matchId} client={client} match={match} user={user} resumed={restored !== null} initialLetters={restored ?? undefined} onFinish={onFinish} onExit={exitToLobby} onLost={onMatchLost} />
       )}
       {leaving && match && <LeaveDialog opponentName={match.opponent.name} onStay={() => setLeaving(false)} onLeave={confirmLeave} />}
     </>

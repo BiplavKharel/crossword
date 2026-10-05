@@ -11,6 +11,6 @@
     "declaration": false,
     "sourceMap": false
   },
-  "include": ["server", "src/types.ts"],
+  "include": ["server", "src/types.ts", "src/matchProtocol.ts"],
   "exclude": ["server/*.test.ts"]
 }

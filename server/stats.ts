@@ -40,12 +40,13 @@ export function validDay(day: unknown, nowMs: number): day is string {
 export const liveStreak = (s: Stats, today: string) =>
   s.lastPlayed === today || s.lastPlayed === dayBefore(today) ? s.streak : 0;
 
-export function applyResult(s: Stats, won: boolean, seconds: number, today: string): Stats {
+/** `seconds` is null for a win that earns no time (the opponent forfeited). */
+export function applyResult(s: Stats, won: boolean, seconds: number | null, today: string): Stats {
   return {
     played: s.played + 1,
     wins: s.wins + (won ? 1 : 0),
     streak: won ? liveStreak(s, today) + 1 : 0,
-    bestTime: won ? Math.min(s.bestTime ?? Infinity, seconds) : s.bestTime,
+    bestTime: won && seconds !== null ? Math.min(s.bestTime ?? Infinity, seconds) : s.bestTime,
     lastPlayed: today,
   };
 }

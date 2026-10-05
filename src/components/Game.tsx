@@ -31,9 +31,11 @@ interface Props {
   initialLetters?: Letters;
   onFinish: (r: MatchResult) => void;
   onExit: () => void;
+  /** The server no longer has this match. */
+  onLost: () => void;
 }
 
-export function Game({ client, match, user, resumed, initialLetters, onFinish, onExit }: Props) {
+export function Game({ client, match, user, resumed, initialLetters, onFinish, onExit, onLost }: Props) {
   const puzzle = useMemo(() => buildPuzzle(match.puzzle), [match]);
   const opponentName = match.opponent.name;
   const [state, dispatch] = useReducer(
@@ -66,10 +68,11 @@ export function Game({ client, match, user, resumed, initialLetters, onFinish, o
       else if (e.type === 'opponent-reconnected') setOppAwayUntil(null);
       else if (e.type === 'connection') setConnection(e.status);
       else if (e.type === 'result') setResult(r => r ?? e.result);
+      else if (e.type === 'match-lost') onLost();
     });
     if (resumed) client.resume(match);
     return off;
-  }, [client, match, resumed]);
+  }, [client, match, resumed, onLost]);
 
   useEffect(() => {
     if (result && !reported.current) {

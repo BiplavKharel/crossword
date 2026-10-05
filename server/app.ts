@@ -1,9 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto';
 import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
-import type { ApiPuzzle, RawPuzzle } from '../src/types.js';
+import type { RawPuzzle } from '../src/types.js';
+import { isLetterGrid, judge, toPublic, WINDOW_SECONDS } from './puzzle.js';
 import { applyResult, validDay } from './stats.js';
-import { memoryStore, WINDOW_SECONDS, type Store } from './store.js';
+import { memoryStore, type Store } from './store.js';
 
 export interface Claims {
   sub: string;
@@ -43,17 +44,21 @@ const newSessionToken = () => SESSION_PREFIX + randomBytes(32).toString('base64u
 
 const toUser = (c: Claims) => ({ id: c.sub, name: c.name, email: c.email, picture: c.picture, exp: c.exp });
 
-/** Strips the letters: players get the layout and clue text only. */
-const toPublic = (p: RawPuzzle): ApiPuzzle => ({
-  id: p.date,
-  date: p.date,
-  size: p.size[0],
-  mask: p.grid.map(row => row.map(Boolean)),
-  clues: {
-    across: p.clues.across.map(({ num, text }) => ({ num, text })),
-    down: p.clues.down.map(({ num, text }) => ({ num, text })),
-  },
-});
+/**
+ * Turns a bearer token into a user: our session token, or (while clients migrate) a Google ID token.
+ * Undefined means the token is not valid; it throws if the session store can't be reached.
+ */
+export function authenticator(verify: Verifier, store: Store, allowGuest = false) {
+  return async (token: string): Promise<Claims | undefined> => {
+    if (allowGuest && token === 'guest') return GUEST;
+    if (token.startsWith(SESSION_PREFIX)) return store.getSession(sha256(token));
+    try {
+      return await verify(token);
+    } catch {
+      return undefined;
+    }
+  };
+}
 
 const bearer = (req: Request) => /^Bearer (.+)$/.exec(req.header('authorization') ?? '')?.[1];
 
@@ -71,26 +76,18 @@ export function createApp(
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
 
-  /** Our own session token, or (while clients migrate) a Google ID token. */
+  const authenticate = authenticator(verify, store, allowGuest);
   const requireUser = async (req: Request, res: Response, next: NextFunction) => {
     const token = bearer(req);
     if (!token) return void res.status(401).json({ error: 'missing token' });
-    if (allowGuest && token === 'guest') {
-      res.locals.user = GUEST;
-      return next();
-    }
     try {
-      const claims = token.startsWith(SESSION_PREFIX) ? await store.getSession(sha256(token)) : await verify(token);
+      const claims = await authenticate(token);
       if (!claims) return void res.status(401).json({ error: 'invalid token' });
       res.locals.user = claims;
       next();
     } catch (err) {
-      // A failed Google check is a bad token; a failed store lookup is our problem, not theirs.
-      if (token.startsWith(SESSION_PREFIX)) {
-        console.error('session lookup failed', err);
-        return void res.status(503).json({ error: 'try again' });
-      }
-      res.status(401).json({ error: 'invalid token' });
+      console.error('session lookup failed', err);
+      res.status(503).json({ error: 'try again' });
     }
   };
 
@@ -138,31 +135,17 @@ export function createApp(
   app.post('/api/puzzles/:id/verify', requireUser, async (req, res) => {
     const puzzle = playable.find(p => p.date === req.params.id);
     if (!puzzle) return void res.status(404).json({ error: 'unknown puzzle' });
-    const n = puzzle.size[0];
-    const letters: unknown = req.body?.letters;
-    const wellFormed =
-      Array.isArray(letters) &&
-      letters.length === n &&
-      letters.every(row => Array.isArray(row) && row.length === n && row.every(c => typeof c === 'string' && c.length <= 1));
-    if (!wellFormed) return void res.status(400).json({ error: 'letters must be an n x n grid of single characters' });
-    const grid = letters as string[][];
+    const grid: unknown = req.body?.letters;
+    if (!isLetterGrid(grid, puzzle.size[0])) return void res.status(400).json({ error: 'letters must be an n x n grid of single characters' });
 
-    // Cap wrong guesses so a signed-in user can't brute-force the answers. If the store is
-    // down we let the request through (and log it) rather than break the game.
     const sub: string = res.locals.user.sub;
-    try {
-      if ((await store.wrongCount(sub, puzzle.date)) >= maxWrongAttempts) {
-        res.set('Retry-After', String(WINDOW_SECONDS));
-        return void res.status(429).json({ error: 'too many wrong attempts, try again later' });
-      }
-    } catch (err) {
-      console.error('attempt store read failed', err);
+    const verdict = await judge(store, sub, puzzle, grid, maxWrongAttempts);
+    if (verdict === 'limited') {
+      res.set('Retry-After', String(WINDOW_SECONDS));
+      return void res.status(429).json({ error: 'too many wrong attempts, try again later' });
     }
-
-    const solved = puzzle.grid.every((row, r) => row.every((answer, c) => (answer ?? '') === grid[r][c].toUpperCase()));
-    if (!solved) {
-      await store.addWrong(sub, puzzle.date).catch(err => console.error('attempt store write failed', err));
-    } else {
+    const solved = verdict === 'solved';
+    if (solved) {
       // Remember the first confirmed solve; it is what lets the player report a win.
       try {
         const play = await store.getPlay(sub);

@@ -36,9 +36,13 @@ export type MatchEvent =
   | { type: 'opponent-reconnected' }
   | { type: 'result'; result: MatchResult }
   | { type: 'connection'; status: ConnectionStatus }
+  /** The server no longer has this match (for example it restarted while we were away). */
+  | { type: 'match-lost' }
   | { type: 'error'; message: string; unauthorized: boolean };
 
 export interface MatchClient {
+  /** True when the server records finished games itself, so the app must not report them. */
+  readonly recordsResults: boolean;
   subscribe(handler: (e: MatchEvent) => void): () => void;
   joinQueue(): void;
   leaveQueue(): void;

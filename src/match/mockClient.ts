@@ -12,6 +12,7 @@ const COUNTDOWN_MS = 6000;
 
 /** Fake matchmaking and opponent. Puzzle fetching and win checking hit the real API. */
 export class MockMatchClient implements MatchClient {
+  readonly recordsResults = false;
   private handlers = new Set<(e: MatchEvent) => void>();
   private queueTimer: number | undefined;
   private botTimers = new Set<number>();

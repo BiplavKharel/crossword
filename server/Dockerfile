@@ -6,7 +6,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig.server.json ./
 COPY server ./server
-COPY src/types.ts ./src/types.ts
+COPY src/types.ts src/matchProtocol.ts ./src/
 RUN npm run server:build
 
 FROM node:22-slim
