@@ -1,4 +1,5 @@
 import { API, type User } from './auth';
+import type { Stats } from './stats';
 import type { ApiPuzzle, Letters } from './types';
 
 export class UnauthorizedError extends Error {}
@@ -23,3 +24,9 @@ export async function verifySolution(user: User, puzzleId: string, letters: Lett
   });
   return solved;
 }
+
+export const fetchStats = (user: User) => call<{ stats: Stats }>(user, '/api/stats').then(r => r.stats);
+
+/** Reports a finished game. A win is only accepted after the server confirmed the solve. */
+export const postResult = (user: User, won: boolean, seconds: number, day: string) =>
+  call<{ stats: Stats }>(user, '/api/stats/result', { method: 'POST', body: JSON.stringify({ won, seconds, day }) }).then(r => r.stats);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { User } from '../auth';
+import { syncStats } from '../serverStats';
 import { currentStreak, loadStats, msUntilTomorrow, playedToday, resetStats } from '../stats';
 import { formatTime } from './EndScreen';
 import { HowToPlay } from './HowToPlay';
@@ -28,6 +29,13 @@ export function Lobby({ user, onPlay }: { user: User; onPlay: () => void }) {
   const [showHow, setShowHow] = useState(() => !seenHowTo());
   const closeHow = () => { markSeen(); setShowHow(false); };
   const locked = playedToday(stats);
+
+  // Show the cached numbers straight away, then swap in the server's.
+  useEffect(() => {
+    let live = true;
+    syncStats(user).then(s => { if (live && s) setStats(s); });
+    return () => { live = false; };
+  }, [user]);
 
   useEffect(() => {
     const id = setInterval(() => setWait(msUntilTomorrow()), 30_000);

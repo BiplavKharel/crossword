@@ -3,9 +3,9 @@ export interface User {
   name: string;
   email: string;
   picture?: string;
-  /** Google ID token. A backend must verify this; the client only decodes it. */
+  /** Bearer token for the API: our session token, or the Google ID token if the server couldn't issue one. */
   credential?: string;
-  /** Expiry, seconds since epoch. */
+  /** Expiry of `credential`, seconds since epoch. */
   exp: number;
 }
 
@@ -25,7 +25,7 @@ export const CLIENT_ID = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID as string | und
 const KEY = 'crossword.user';
 export const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
-/** Ask the server to verify a Google credential. Throws if it's rejected. */
+/** Ask the server to verify a Google credential and start a session. Throws if it's rejected. */
 export async function verifyCredential(credential: string): Promise<User> {
   const res = await fetch(`${API}/api/auth/google`, {
     method: 'POST',
@@ -33,8 +33,18 @@ export async function verifyCredential(credential: string): Promise<User> {
     body: JSON.stringify({ credential }),
   });
   if (!res.ok) throw new Error(res.status === 401 ? 'Google token rejected by server' : 'Server error');
-  const { user } = await res.json();
-  return { ...user, credential };
+  const { user, token } = await res.json();
+  return { ...user, credential: token ?? credential };
+}
+
+/** Best-effort: ends the session on the server so a copied token stops working. */
+export async function endSession(u: User): Promise<void> {
+  if (!u.credential?.startsWith('cw_')) return;
+  try {
+    await fetch(`${API}/api/auth/logout`, { method: 'POST', headers: { authorization: `Bearer ${u.credential}` } });
+  } catch {
+    /* offline: the session just runs out on its own */
+  }
 }
 
 /** Re-verify a stored session. Only an explicit rejection counts as invalid; a down server doesn't sign you out. */

@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { after, before, test } from 'node:test';
 import type { RawPuzzle } from '../src/types.js';
 import { createApp, type Verifier } from './app.js';
+import { memoryStore } from './store.js';
 
 const verify: Verifier = async t => {
   if (t !== 'good') throw new Error('bad');
@@ -126,7 +127,7 @@ test('verify: a failing attempt store does not break the game', async () => {
     wrongCount: async () => { throw new Error('ddb down'); },
     addWrong: async () => { throw new Error('ddb down'); },
   };
-  const s = createApp(verify, { puzzles: [puzzle], attempts: broken }).listen(0);
+  const s = createApp(verify, { puzzles: [puzzle], store: { ...memoryStore(), ...broken } }).listen(0);
   const b = `http://localhost:${(s.address() as AddressInfo).port}`;
   try {
     const wrong = solution.map(r => [...r]);

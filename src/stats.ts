@@ -1,5 +1,5 @@
-// Placeholder persistence: stats live in this browser's localStorage, keyed by user.
-// Replace with server-side storage once there is a database.
+// This browser's copy of the player's stats: instant to read and works offline. The server is the
+// source of truth; `serverStats.ts` keeps this cache in step with it.
 
 export interface Stats {
   played: number;
@@ -25,7 +25,7 @@ export function loadStats(userId: string): Stats {
   }
 }
 
-function save(userId: string, s: Stats) {
+export function saveStats(userId: string, s: Stats) {
   try {
     localStorage.setItem(key(userId), JSON.stringify(s));
   } catch {
@@ -42,7 +42,7 @@ export function recordResult(userId: string, won: boolean, seconds: number): Sta
     bestTime: won ? Math.min(s.bestTime ?? Infinity, seconds) : s.bestTime,
     lastPlayed: dayString(),
   };
-  save(userId, next);
+  saveStats(userId, next);
   return next;
 }
 

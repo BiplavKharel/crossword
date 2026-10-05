@@ -5,12 +5,13 @@ import { LeaveDialog } from './components/LeaveDialog';
 import { Lobby } from './components/Lobby';
 import { Login } from './components/Login';
 import { Queue } from './components/Queue';
-import { loadUser, saveUser, sessionStillValid, type User } from './auth';
+import { endSession, loadUser, saveUser, sessionStillValid, type User } from './auth';
 import { createMatchClient, type MatchClient, type MatchInfo, type MatchResult } from './match';
 import { clearMatch, loadMatch, saveMatch } from './match/persist';
 import { emptyLetters } from './puzzle';
 import { gameIdFromRoute, gameRoute, readRoute, useRoute } from './router';
-import { loadStats, playedToday, recordResult } from './stats';
+import { reportResult } from './serverStats';
+import { loadStats, playedToday } from './stats';
 
 const formatDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -30,6 +31,8 @@ export default function App() {
   const login = useCallback((u: User) => { saveUser(u); setUser(u); navigate('/', { replace: true }); }, [navigate]);
   const logout = useCallback(() => {
     window.google?.accounts.id.disableAutoSelect();
+    const stored = loadUser();
+    if (stored) void endSession(stored);
     saveUser(null);
     setUser(null);
   }, []);
@@ -112,7 +115,7 @@ export default function App() {
 
   const onFinish = useCallback((r: MatchResult) => {
     if (!user) return;
-    recordResult(user.id, r.winner === 'me', r.seconds);
+    void reportResult(user, r.winner === 'me', r.seconds);
     activeRoute.current = null; // the game is over; leaving no longer forfeits anything
     clearMatch();
     setFinished(true);
@@ -123,7 +126,7 @@ export default function App() {
   const confirmLeave = () => {
     if (user && match) {
       client?.forfeit();
-      recordResult(user.id, false, Math.max(0, Math.round((Date.now() - match.startsAt) / 1000)));
+      void reportResult(user, false, Math.max(0, Math.round((Date.now() - match.startsAt) / 1000)));
     }
     exitToLobby();
   };
